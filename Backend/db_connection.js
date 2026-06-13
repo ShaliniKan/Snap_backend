@@ -1,17 +1,13 @@
-const mysql = require('mysql2');
-const connection = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    password: 'Dimri@3009',
-    database: 'apnamart_db'
-});
-
-connection.connect((err)=>{
-    if(err){
-        console.error('Error has occurred: ',err.message);
-        return;
+const mongo = require("mongoose");
+const connectDB = async() => {
+    try{
+        await mongo.connect("mongodb://127.0.0.1:27017/apnamart_db");
+        console.log("Connection is established");
+    } catch(error){
+        console.error("Connction failed: ", error.message);
+        process.exit(1);
     }
-    console.log('Connected to Mysql');
-});
 
-module.exports = connection;
+};
+
+module.exports = connectDB;
