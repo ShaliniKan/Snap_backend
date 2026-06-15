@@ -12,7 +12,7 @@ const productSchema = mongoose.Schema({
     },
     name: {
         type: String,
-        reuired: true,
+        required: true,
     },
     description: {
         type: String

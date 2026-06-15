@@ -6,7 +6,7 @@ userId:{
     required: true,
     unique: true
 },
-dateofBirth: {
+dateOfBirth: {
     type: Date
 },
 gender: {
@@ -19,7 +19,7 @@ addresses: [{
         enum: ["home", "work","other"],
         default: "home"
     },
-    addressLine2: {
+    addressLine1: {
         type: String,
         required: true,
         trim: true,

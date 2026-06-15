@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const connectDB = require("./db_connection");
 
@@ -13,6 +14,7 @@ const app = express();
 connectDB();
 
 app.use(express.json());
+
 //Api routes
 app.use("/api/users", userRoutes);
 app.use("/api/customer",customerRoutes);
