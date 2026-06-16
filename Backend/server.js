@@ -20,7 +20,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/customer",customerRoutes);
 app.use("/api/vendor", vendorRoutes);
 app.use("/api/product", productRoutes);
-app.use("/api/product_variant", variantRoutes);
+app.use("/api/product/product_variant", variantRoutes);
 
 
 

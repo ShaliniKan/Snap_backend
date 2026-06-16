@@ -2,7 +2,7 @@ const Variant = require('../Modules/Product_Variant');
 
 const createVariant= async(req, res) =>{
     try{
-        const variant = await Variant.create(req.body)
+        const variant = await Variant.create({...req.body, product_id: req.params.product_id });
         res.status(201).json({
             success: true,
             message: "Variant is created successfully",
@@ -16,6 +16,4 @@ const createVariant= async(req, res) =>{
     }
 };
 
-module.exports = {
-    createVariant
-};
+module.exports = {createVariant};
