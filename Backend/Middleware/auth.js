@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken");
-const auth = (req,res,next) => {
+const authUser = (req,res,next) => {
     try{
-        const authHeader = req.headers.auth;
+        const authHeader = req.headers.authUser;
         if(!authHeader){
             return res.status(401).json({
                 success: false,
@@ -21,3 +21,5 @@ const auth = (req,res,next) => {
         });
     }
 };
+
+module.exports = {authUser};
