@@ -1,4 +1,5 @@
 const Product = require('../Modules/Product');
+const Variant = require('../Modules/Product_Variant');
 
 const createProduct = async(req, res) =>{
     try{
@@ -65,6 +66,11 @@ const deleteProduct = async(req,res) => {
         if(!deleteProduct){
             return res.status(404).json({success: false, message: "Product not found"});
         }
+        const variant = await Variant.find({product_id: deleteProduct._id})
+            if(variant.length>0){
+                return res.status(404).json({success: false, message: "Cannot delete Product. Delete its variants first."});
+            }
+            await Product.findByIdAndDelete(req.params.id);
         res.status(200).json(deleteProduct);
     }catch(error){
         res.status(500).json({

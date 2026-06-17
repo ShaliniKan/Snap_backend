@@ -5,10 +5,10 @@ const variantController = require("../controllers/variantController");
 const {authUser} = require("../Middleware/auth");
 const {authRole} = require("../Middleware/authRole");
 
-router.post("/",authUser,authRole("vendor"),variantController.createVariant);
-router.get("/",authUser,authRole("vendor"),variantController.getVariant);
-router.get("/:id",authUser,authRole("vendor"),variantController.getVariantById);
-router.put("/:id",authUser,authRole("vendor"),variantController.putVariant);
-router.delete("/:id",authUser,authRole("vendor"),variantController.deleteVariant);
+router.post("/",authUser,authRole("vendor"),variantController.createVariants);
+router.get("/",authUser,authRole("vendor,customer"),variantController.getVariants);
+router.get("/:id",authUser,authRole("vendor,customer"),variantController.getVariantsById);
+router.put("/:id",authUser,authRole("vendor"),variantController.putVariants);
+router.delete("/:id",authUser,authRole("vendor"),variantController.deleteVariants);
 
 module.exports = router;

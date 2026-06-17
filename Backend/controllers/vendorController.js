@@ -2,7 +2,7 @@ const Vendor = require('../Modules/Vendor');
 
 const createVendor = async(req, res) =>{
     try{
-        const vendor = await Vendor.create(req.body)
+        const vendor = await Vendor.create({...req.body, userId: req.params.user.userId})
         res.status(201).json({
             success: true,
             message: "Vendor created successfully",

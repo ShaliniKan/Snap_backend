@@ -8,6 +8,7 @@ const customerRoutes = require("./routes/customerRoutes");
 const vendorRoutes = require("./routes/vendorRoutes");
 const productRoutes = require("./routes/productRoutes");
 const variantRoutes = require("./routes/variantRoutes");
+const categoriesRoutes = require("./routes/categoriesRoutes");
 
 //start
 const app = express();
@@ -19,8 +20,9 @@ app.use(express.json());
 app.use("/api/users", userRoutes);
 app.use("/api/customer",customerRoutes);
 app.use("/api/vendor", vendorRoutes);
+app.use("/api/categories",categoriesRoutes);
 app.use("/api/product", productRoutes);
-app.use("/api/product/product_variant", variantRoutes);
+app.use("/api/product/:productId", variantRoutes);
 
 
 

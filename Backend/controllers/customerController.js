@@ -2,7 +2,7 @@ const Customer = require('../Modules/Customer');
 
 const createCustomer = async(req, res) =>{
     try{
-        const customer = await Customer.create(req.body)
+        const customer = await Customer.create({...req.body, userId: req.params.user.userId})
         res.status(201).json({
             success: true,
             message: "Customer created successfully",
