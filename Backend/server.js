@@ -9,6 +9,8 @@ const vendorRoutes = require("./routes/vendorRoutes");
 const productRoutes = require("./routes/productRoutes");
 const variantRoutes = require("./routes/variantRoutes");
 const categoriesRoutes = require("./routes/categoriesRoutes");
+const cartRoutes = require("./routes/cartRoutes");
+const orderRoutes = require("./routes/orderRoutes");
 
 //start
 const app = express();
@@ -23,6 +25,8 @@ app.use("/api/vendor", vendorRoutes);
 app.use("/api/categories",categoriesRoutes);
 app.use("/api/product", productRoutes);
 app.use("/api/product/:productId", variantRoutes);
+app.use("/api/cart", cartRoutes);
+app.use("/api/order", orderRoutes);
 
 
 
