@@ -161,3 +161,5 @@ const cancelOrder = async(req,res) => {
         });
     }
 };
+
+module.exports = {createOrder,getMyOrders,getOrderById,cancelOrder};
