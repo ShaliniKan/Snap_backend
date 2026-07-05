@@ -1,36 +1,30 @@
-const TopHeader = () =>{
-return(
-        <div className=" w-full">
-        <div className="flex justify-between items-center self-stretch py-2.5 px-12 bg-[#ffe7ea]">
-                    <div className="flex flex-1 items-center gap-6 text-xs font-bold"> 
-                        <div> FREE Delivery</div>
-                        <div>7 Days Easy Returns</div>
-                        <div>Best Prices</div>
-                    </div>
-                   
-            <div className="flex items-center gap-6">
-                <a className="flex items-center cursor-pointer gap-2" href=" ">
-                    <img src="/blog.png" alt="Blog" className="w-5 h-5"/>
-                    <span className="">
-                        Our Blog
-                    </span>
-                </a>
-                <a className="flex items-center cursor-pointer gap-2" href=" ">
-                    <img src="/help.png" alt="Help Center" className="w-7 h-7"/>
-                    <span className="">
-                         Help Center
-                    </span>
-                </a>
-                <a className="flex items-center cursor-pointer gap-2" href=" ">
-                                <img src="/sell deal.png" alt="Help Center" className="w-7 h-7"/>
-                                <span className="">
-                                    Sell On Deal
-                                </span>
-                </a>
+const TopHeader = () => {
+    return (
+        <div className="w-full bg-[#ffe7ea]">
+            <div className="flex flex-col gap-3 px-4 py-2.5 text-xs font-semibold text-slate-700 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-12">
+                <div className="flex flex-wrap items-center gap-4">
+                    <div>FREE Delivery</div>
+                    <div>7 Days Easy Returns</div>
+                    <div>Best Prices</div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-4">
+                    <a className="flex items-center gap-2" href="/">
+                        <img src="/blog.png" alt="Blog" className="h-5 w-5" />
+                        <span>Our Blog</span>
+                    </a>
+                    <a className="flex items-center gap-2" href="/">
+                        <img src="/help.png" alt="Help Center" className="h-6 w-6" />
+                        <span>Help Center</span>
+                    </a>
+                    <a className="flex items-center gap-2" href="/">
+                        <img src="/sell deal.png" alt="Sell on ApnaMart" className="h-6 w-6" />
+                        <span>Sell On ApnaMart</span>
+                    </a>
+                </div>
             </div>
         </div>
-        </div>
-);
+    );
 };
 
 export default TopHeader;

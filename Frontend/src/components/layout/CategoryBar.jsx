@@ -1,30 +1,30 @@
+const categories = [
+    "Men's Fashion",
+    "Women's Fashion",
+    "Electronics",
+    "Beauty & Health",
+    "Home & Kitchen",
+];
+
 const CategoryBar = () => {
-return(
-    <div className="flex items-center gap-4 px-12 py-3 bg-white text-sm font-medium">
-                <button className="flex items-center gap-2 px-3 py-2 hover:text-red-500">
-                    <img src="/men.jpg" className="w-9 h-710 rounded-full object-cover border border-gray-200"/>
-                    Men's Fashion
+    return (
+        <div className="flex items-center gap-4 overflow-x-auto bg-white px-4 py-3 text-sm font-medium sm:px-6 lg:px-12">
+            {categories.map((category) => (
+                <button
+                    key={category}
+                    className="flex shrink-0 items-center gap-2 px-3 py-2 hover:text-red-500"
+                    type="button"
+                >
+                    <img
+                        src="/men.jpg"
+                        alt=""
+                        className="h-9 w-9 rounded-full border border-gray-200 object-cover"
+                    />
+                    {category}
                 </button>
-                
-                <button className="flex items-center gap-2 px-3 py-2 hover:text-red-500">
-                    <img src="/men.jpg" className="w-9 h-710 rounded-full object-cover border border-gray-200"/>
-                    Women's Fashion
-                </button>
-
-               <button className="flex items-center gap-2 px-3 py-2 hover:text-red-500">
-                    <img src="/men.jpg" className="w-9 h-710 rounded-full object-cover border border-gray-200"/>
-                    Electronics
-                </button>
-                <button className="flex items-center gap-2 px-3 py-2 hover:text-red-500">
-                    <img src="/men.jpg" className="w-9 h-710 rounded-full object-cover border border-gray-200"/>
-                    Beauty & Health
-                </button>
-
-                <button className="flex items-center gap-2 px-3 py-2 hover:text-red-500">
-                    <img src="/men.jpg" className="w-9 h-710 rounded-full object-cover border border-gray-200"/>
-                    Home & Kitchen
-                </button>
-    </div>
-);
+            ))}
+        </div>
+    );
 };
+
 export default CategoryBar;

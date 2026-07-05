@@ -1,38 +1,37 @@
 import CategoryBar from "./CategoryBar";
 
-const Navbar = ({onLoginClick}) => {
-    return(
-        <header className="flex flex-col w-full min-w-[1024px] bg-white shadow-md" name="TopHeaderWrapper">
-            
-            <div  className="flex items-center w-full px-12 py-3">
-                {/* Logo*/}
-                <div className="flex w-[148px] h-[31.08px] justify-center items-center">
-                    <img src="/Mainlogo.jpg" alt="Snapdeal" className="w-full h-full object-contain"/></div>
-                {/*Right Section*/}
-                <div className="flex flex-1 items-center">
-                    {/*Search*/}
-                    <div className="flex-1 mx-8">
-                        <input className="w-full h-10 px-3 rounded border border-gray-300 bg-gray-100" 
-                            type="text" placeholder="Search for Brand & Product"/>
+const Navbar = ({ onLoginClick }) => {
+    return (
+        <header className="w-full bg-white shadow-sm">
+            <div className="flex flex-col gap-3 px-4 py-3 sm:px-6 lg:px-12 xl:flex-row xl:items-center">
+                <div className="flex items-center justify-between gap-4">
+                    <div className="flex h-[32px] w-[148px] items-center justify-center">
+                        <img src="/Mainlogo.jpg" alt="ApnaMart" className="h-full w-full object-contain" />
                     </div>
-                    {/* Login*/}
-                    <div className="flex w-[65px] flex-col items-center gap-[3px] cursor-pointer">
-                        <span className="text-ellipsis w-[80px] text-[rgb(102,102,102)] text-center text-base not-italic font-bold leading-snug tracking-tight">
-                        <button onClick={onLoginClick}> Login </button>
-                        </span>   
+                    <div className="flex items-center gap-3 xl:hidden">
+                        <button className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700" onClick={onLoginClick}>Login</button>
+                        <button className="rounded-lg bg-red-500 px-3 py-2 text-sm font-semibold text-white">Cart</button>
                     </div>
-                    {/* Cart */}
-                    <div className="flex w-[65px] flex-col items-center gap-[3px] cursor-pointer">
-                        <span className="text-ellipsis w-[80px] text-[rgb(102,102,102)] text-center text-base not-italic font-bold leading-snug tracking-tight">
-                            My Cart
-                        </span>
+                </div>
+
+                <div className="flex flex-1 flex-col gap-3 xl:flex-row xl:items-center">
+                    <div className="flex-1">
+                        <input
+                            className="h-11 w-full rounded-full border border-slate-200 bg-slate-50 px-4 text-sm outline-none focus:border-red-400"
+                            type="text"
+                            placeholder="Search for brands and products"
+                        />
+                    </div>
+
+                    <div className="hidden items-center gap-3 xl:flex">
+                        <button className="rounded-full px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100" onClick={onLoginClick}>Login</button>
+                        <button className="rounded-full bg-red-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-600">My Cart</button>
                     </div>
                 </div>
             </div>
-            <div className="bg-white self-stretch items-center pt-0 px-12 pb-[6px]"></div>
-            <div className="flex-1 ">
-            {/*Categories*/}
-                <CategoryBar/>
+
+            <div className="border-t border-slate-100">
+                <CategoryBar />
             </div>
         </header>
     );
