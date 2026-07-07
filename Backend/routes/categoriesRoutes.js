@@ -8,12 +8,13 @@ const {authRole} = require("../Middleware/authRole");
 //routes
 
 router.get("/",categoriesController.getAllCategories);
-router.get("/:id",categoriesController.getSubCategories);
-router.post("/",authUser,authRole("admin,vendor"),categoriesController.createCategory);
-router.post("/:id",authUser,authRole("admin,vendor"),categoriesController.createSubcategory);
-router.put("/",authUser,authRole("admin,vendor"),categoriesController.putCategory);
-router.put("/:id",authUser,authRole("admin,vendor"),categoriesController.putSubcategory);
-router.delete("/",authUser,authRole("admin,vendor"),categoriesController.deleteCategory);
-router.delete("/:id",authUser,authRole("admin,vendor"),categoriesController.deleteSubcategory);
+router.get("/:id",categoriesController.getCategoryWithChildren);
+router.get("/:id/subcategories",categoriesController.getSubCategories);
+router.post("/", authUser, authRole("vendor"), categoriesController.createCategory);
+router.post("/:id", authUser, authRole("vendor"), categoriesController.createSubcategory);
+router.put("/:id", authUser, authRole("vendor"), categoriesController.putCategory);
+router.put("/subcategories/:id", authUser, authRole("vendor"), categoriesController.putSubcategory);
+router.delete("/:id", authUser, authRole("vendor"), categoriesController.deleteCategory);
+router.delete("/subcategories/:id", authUser, authRole("vendor"), categoriesController.deleteSubcategory);
 
 module.exports = router;

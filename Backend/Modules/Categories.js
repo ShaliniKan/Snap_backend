@@ -12,6 +12,7 @@ const categorySchema = mongoose.Schema({
         ref: "Category",
         default: null
     }
+    
 }, {
     timestamps: true
 });
