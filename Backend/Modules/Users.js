@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const bcrypt = require("bcrypt");
 
 const userSchema = new mongoose.Schema({
     firstName: {
@@ -13,7 +14,7 @@ const userSchema = new mongoose.Schema({
         maxlength: 100,
         trim: true
     },
-    email:{
+    email: {
         type: String,
         required: true,
         unique: true,
@@ -27,23 +28,30 @@ const userSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ["customer", "vendor"],
+        enum: ["customer", "vendor", "admin"],
         required: true
+    },
+    approvalStatus: {
+        type: String,
+        enum: ["pending", "approved", "rejected"],
+        default: function () {
+            return this.role === "vendor" ? "pending" : undefined;
+        },
     },
     isVerified: {
         type: Boolean,
         default: false
     }
 }, {
-    timestamps : true
+    timestamps: true
 });
 
-const bcrypt = require("bcrypt");
-userSchema.pre("save", async function (next) { 
-    if (!this.isModified("password")){
+userSchema.pre("save", async function (next) {
+    if (!this.isModified("password")) {
         return;
     }
-    this.password = await bcrypt.hash(this.password,10);
-    
+
+    this.password = await bcrypt.hash(this.password, 10);
 });
+
 module.exports = mongoose.model("User", userSchema);
