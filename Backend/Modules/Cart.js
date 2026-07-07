@@ -23,18 +23,13 @@ const cartSchema = mongoose.Schema(
 
             quantity: {
                 type: Number,
-                default: 1
+                default: 1,
+                min: 1
             },
 
             price: {
                 type: Number,
                 required: true
-            },
-
-            stock: {
-                type: mongoose.Schema.Types.ObjectId,
-                require: true,
-                ref: "Product_Variant"
             }
         }
     ],

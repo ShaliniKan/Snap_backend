@@ -11,6 +11,12 @@ const variantRoutes = require("./routes/variantRoutes");
 const categoriesRoutes = require("./routes/categoriesRoutes");
 const cartRoutes = require("./routes/cartRoutes");
 const orderRoutes = require("./routes/orderRoutes");
+const reviewRoutes = require("./routes/reviewRoutes");
+const couponRoutes = require("./routes/couponRoutes");
+const deliveryRoutes = require("./routes/deliveryRoutes");
+const returnRoutes = require("./routes/returnRoutes");
+const paymentRoutes = require("./routes/paymentRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 
 //start
 const app = express();
@@ -27,7 +33,13 @@ app.use("/api/product", productRoutes);
 app.use("/api/product/:productId", variantRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/order", orderRoutes);
-
+app.use("/api/reviews", reviewRoutes);
+app.use("/api/coupons", couponRoutes);
+app.use("/api/delivery", deliveryRoutes);
+app.use("/api/returns", returnRoutes);
+app.use("/api/payment", paymentRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/uploads", express.static("uploads"));
 
 
 app.listen(5000,() => {

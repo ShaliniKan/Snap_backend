@@ -4,7 +4,7 @@ const connectDB = async() => {
         await mongo.connect("mongodb://127.0.0.1:27017/apnamart_db");
         console.log("Connection is established");
     } catch(error){
-        console.error("Connction failed: ", error.message);
+        console.error("Connction failed: ", error);
         process.exit(1);
     }
 
