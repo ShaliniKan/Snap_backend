@@ -9,6 +9,7 @@ const TopHeader = () => {
                     <div>FREE Delivery</div>
                     <div>7 Days Easy Returns</div>
                     <div>Best Prices</div>
+                    
                 </div>
 
                 <div className="flex flex-wrap items-center gap-4">

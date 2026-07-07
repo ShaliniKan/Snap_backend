@@ -2,13 +2,25 @@ import AuthLayout from "../../components/auth/authLayout";
 import FormAlert from "../../components/common/FormAlert";
 import FormInput from "../../components/common/FormInput";
 
-const Register = ({ onClose, onSwitchToLogin, onSubmit, formData, onChange, isSubmitting, error, message }) => {
+const Register = ({
+    onClose,
+    onSwitchToLogin,
+    onSubmit,
+    formData,
+    onChange,
+    isSubmitting,
+    error,
+    message,
+    title = "Sign up",
+    subtitle = "Create account",
+    submitLabel = "Create account",
+}) => {
     return (
         <AuthLayout onClose={onClose}>
             <div className="w-[92vw] max-w-[430px] rounded-2xl bg-white p-8 shadow-2xl">
                 <div className="mb-6">
-                    <p className="text-sm font-semibold uppercase tracking-[0.3em] text-red-500">Create account</p>
-                    <h2 className="mt-2 text-3xl font-semibold text-slate-900">Sign up</h2>
+                    <p className="text-sm font-semibold uppercase tracking-[0.3em] text-red-500">{subtitle}</p>
+                    <h2 className="mt-2 text-3xl font-semibold text-slate-900">{title}</h2>
                 </div>
 
                 <form className="space-y-4" onSubmit={onSubmit}>
@@ -46,7 +58,7 @@ const Register = ({ onClose, onSwitchToLogin, onSubmit, formData, onChange, isSu
                     />
 
                     <button type="submit" className="h-11 w-full rounded-lg bg-red-500 font-semibold text-white transition hover:bg-red-600" disabled={isSubmitting}>
-                        {isSubmitting ? "Creating account..." : "Create account"}
+                        {isSubmitting ? "Creating account..." : submitLabel}
                     </button>
                 </form>
 
