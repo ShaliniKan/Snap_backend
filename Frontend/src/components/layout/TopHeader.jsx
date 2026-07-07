@@ -1,3 +1,6 @@
+import { Link } from "react-router-dom";
+import { ROUTES } from "../../routes/routePaths";
+
 const TopHeader = () => {
     return (
         <div className="w-full bg-[#ffe7ea]">
@@ -17,10 +20,10 @@ const TopHeader = () => {
                         <img src="/help.png" alt="Help Center" className="h-6 w-6" />
                         <span>Help Center</span>
                     </a>
-                    <a className="flex items-center gap-2" href="/">
-                        <img src="/sell deal.png" alt="Sell on ApnaMart" className="h-6 w-6" />
-                        <span>Sell On ApnaMart</span>
-                    </a>
+                    <Link className="flex items-center gap-2 hover:text-red-600" to={ROUTES.public.sell}>
+                        <img src="C:\Users\digam\Snapdeal(ApnaMart)\Frontend\public\sell deal.png" alt=" img" className="h-6 w-6" />
+                        <span>Sell On Snapdeal</span>
+                    </Link>
                 </div>
             </div>
         </div>
