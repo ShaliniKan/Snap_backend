@@ -28,7 +28,7 @@ const vendorSchema = mongoose.Schema({
         default: false
     }
 },{
-    timestaps: true
+    timestamps: true
 });
 
 module.exports = mongoose.model("Vendor",vendorSchema);
