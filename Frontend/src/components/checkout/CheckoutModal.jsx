@@ -9,7 +9,8 @@ import OrderSummary from "./OrderSummary";
 import { createOrder } from "../../services/orderService";
 import { validateCoupon } from "../../services/couponService";
 import { checkPincode } from "../../services/deliveryService";
-import { createPaymentOrder, verifyPayment } from "../../services/paymentService";
+import { createPaymentOrder } from "../../services/paymentService";
+import { getStoredUserEmail, openRazorpayCheckout } from "../../utils/razorpayCheckout";
 
 const requiredAddressFields = ["name", "mobile", "pincode", "houseNo", "city", "state"];
 
@@ -177,17 +178,36 @@ const CheckoutModal = ({
 
             let razorpay_order_id = "";
             let razorpay_payment_id = "";
+            let razorpay_signature = "";
 
             if (selectedPayment !== "cod") {
                 const paymentOrder = await createPaymentOrder(payableTotal);
-                razorpay_order_id = paymentOrder.orderId;
 
                 if (paymentOrder.provider === "mock") {
+                    razorpay_order_id = paymentOrder.orderId;
                     razorpay_payment_id = `mock_pay_${Date.now()}`;
+                } else if (paymentOrder.provider === "razorpay") {
+                    const paymentResult = await openRazorpayCheckout({
+                        keyId: paymentOrder.keyId,
+                        orderId: paymentOrder.orderId,
+                        amount: paymentOrder.amount,
+                        currency: paymentOrder.currency,
+                        prefill: {
+                            name: address.name,
+                            email: getStoredUserEmail(),
+                            contact: address.mobile || contactDetails.phone,
+                        },
+                    });
+
+                    razorpay_order_id = paymentResult.razorpay_order_id;
+                    razorpay_payment_id = paymentResult.razorpay_payment_id;
+                    razorpay_signature = paymentResult.razorpay_signature;
+                } else {
+                    throw new Error("Unsupported payment provider");
                 }
             }
 
-            const order = await createOrder({
+            await createOrder({
                 shipping_address: {
                     ...address,
                     mobile: address.mobile || contactDetails.phone,
@@ -196,20 +216,14 @@ const CheckoutModal = ({
                 coupon_code: couponCode || undefined,
                 razorpay_order_id,
                 razorpay_payment_id,
+                razorpay_signature,
             });
-
-            if (selectedPayment !== "cod" && razorpay_payment_id) {
-                await verifyPayment({
-                    razorpay_order_id,
-                    razorpay_payment_id,
-                    orderId: order._id,
-                });
-            }
 
             setOrderSuccess(true);
             onOrderSuccess?.();
         } catch (err) {
-            setOrderError(err.response?.data?.message || "We could not place your order. Please try again.");
+            const message = err.response?.data?.message || err.message || "We could not place your order. Please try again.";
+            setOrderError(message);
         } finally {
             setIsSubmitting(false);
         }
