@@ -8,7 +8,7 @@ const { getUserId, getVendorProductIds } = require("../utils/vendorHelpers");
 const { validateCoupon } = require("../utils/couponHelpers");
 const { checkPincode } = require("../utils/deliveryHelpers");
 const { sendOrderConfirmationEmail } = require("../utils/emailService");
-const { isRazorpayEnabled } = require("../controllers/paymentController");
+const { isRazorpayEnabled, verifyRazorpaySignature } = require("../utils/paymentHelpers");
 
 const restoreStock = async (items = []) => {
     for (const item of items) {
@@ -76,6 +76,7 @@ const createOrder = async (req, res) => {
             coupon_code,
             razorpay_order_id,
             razorpay_payment_id,
+            razorpay_signature,
         } = req.body;
 
         const cart = await Cart.findOne({ customer_id: req.user.id });
@@ -130,12 +131,26 @@ const createOrder = async (req, res) => {
 
         if (isOnlinePayment) {
             if (isRazorpayEnabled()) {
-                if (!razorpay_payment_id) {
+                if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
                     return res.status(400).json({
                         success: false,
                         message: "Payment verification is required for online payments",
                     });
                 }
+
+                if (
+                    !verifyRazorpaySignature(
+                        razorpay_order_id,
+                        razorpay_payment_id,
+                        razorpay_signature
+                    )
+                ) {
+                    return res.status(400).json({
+                        success: false,
+                        message: "Payment verification failed",
+                    });
+                }
+
                 paymentStatus = "paid";
             } else {
                 paymentStatus = "paid";

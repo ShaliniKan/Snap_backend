@@ -1,7 +1,6 @@
-const crypto = require("crypto");
 const Order = require("../Modules/Order");
-
-const isRazorpayEnabled = () => Boolean(process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET);
+const Razorpay = require("razorpay");
+const { isRazorpayEnabled, verifyRazorpaySignature } = require("../utils/paymentHelpers");
 
 const createPaymentOrder = async (req, res) => {
     try {
@@ -13,7 +12,6 @@ const createPaymentOrder = async (req, res) => {
         }
 
         if (isRazorpayEnabled()) {
-            const Razorpay = require("razorpay");
             const razorpay = new Razorpay({
                 key_id: process.env.RAZORPAY_KEY_ID,
                 key_secret: process.env.RAZORPAY_KEY_SECRET,
@@ -56,12 +54,13 @@ const verifyPayment = async (req, res) => {
         const { razorpay_order_id, razorpay_payment_id, razorpay_signature, orderId } = req.body;
 
         if (isRazorpayEnabled()) {
-            const expectedSignature = crypto
-                .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
-                .update(`${razorpay_order_id}|${razorpay_payment_id}`)
-                .digest("hex");
-
-            if (expectedSignature !== razorpay_signature) {
+            if (
+                !verifyRazorpaySignature(
+                    razorpay_order_id,
+                    razorpay_payment_id,
+                    razorpay_signature
+                )
+            ) {
                 return res.status(400).json({ success: false, message: "Payment verification failed" });
             }
         }
@@ -83,8 +82,19 @@ const verifyPayment = async (req, res) => {
     }
 };
 
+const getPaymentConfig = async (_req, res) => {
+    return res.status(200).json({
+        success: true,
+        data: {
+            razorpayEnabled: isRazorpayEnabled(),
+            keyId: isRazorpayEnabled() ? process.env.RAZORPAY_KEY_ID : null,
+        },
+    });
+};
+
 module.exports = {
     createPaymentOrder,
     verifyPayment,
+    getPaymentConfig,
     isRazorpayEnabled,
 };
