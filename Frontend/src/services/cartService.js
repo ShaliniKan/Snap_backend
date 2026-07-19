@@ -9,11 +9,13 @@ export const getCart = async () => {
     return getCartData(response);
 };
 
-export const addToCart = async ({ productId, variantId, quantity = 1 }) => {
+export const addToCart = async ({ productId, variantId, quantity = 1, size = "", color = "" }) => {
     const response = await api.post("/api/cart/add", {
         product_id: productId,
         variant_id: variantId,
         quantity,
+        size,
+        color,
     });
 
     return getCartData(response);

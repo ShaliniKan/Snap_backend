@@ -2,13 +2,13 @@ import AuthLayout from "../../components/auth/authLayout";
 import FormAlert from "../../components/common/FormAlert";
 import FormInput from "../../components/common/FormInput";
 
-const Login = ({ onClose, onSwitchToRegister, onSubmit, formData, onChange, isSubmitting, error, message }) => {
+const Login = ({ onClose, onSwitchToRegister, onSubmit, formData, onChange, isSubmitting, error, message, title = "Login", subtitle = "Welcome back" }) => {
     return (
         <AuthLayout onClose={onClose}>
             <div className="w-[92vw] max-w-[430px] rounded-2xl bg-white p-8 shadow-2xl">
                 <div className="mb-6">
-                    <p className="text-sm font-semibold uppercase tracking-[0.3em] text-red-500">Welcome back</p>
-                    <h2 className="mt-2 text-3xl font-semibold text-slate-900">Login</h2>
+                    <p className="text-sm font-semibold uppercase tracking-[0.3em] text-red-500">{subtitle}</p>
+                    <h2 className="mt-2 text-3xl font-semibold text-slate-900">{title}</h2>
                 </div>
 
                 <form className="space-y-4" onSubmit={onSubmit}>

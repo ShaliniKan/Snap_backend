@@ -91,7 +91,7 @@ const SellOnApnaMart = () => {
                         <span className="hidden text-sm text-slate-600 sm:inline">Already a user?</span>
                         <button
                             className="rounded-sm border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-                            onClick={openLogin}
+                            onClick={() => openLogin("vendor")}
                             type="button"
                         >
                             Login

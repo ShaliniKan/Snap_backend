@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import AccountPageLayout from "../components/layout/account/AccountPageLayout";
 import SectionState from "../components/common/SectionState";
 import { cancelOrder, getMyOrders } from "../services/orderService";
 import { createReturnRequest } from "../services/returnService";
@@ -15,6 +16,8 @@ const Orders = () => {
 
     const loadOrders = async () => {
         setLoading(true);
+        setError("");
+
         try {
             const data = await getMyOrders();
             setOrders(data);
@@ -41,49 +44,67 @@ const Orders = () => {
         window.alert("Return request submitted.");
     };
 
-    if (loading) return <SectionState>Loading your orders...</SectionState>;
-    if (error) return <SectionState variant="error">{error}</SectionState>;
-
     return (
-        <div className="space-y-6">
-            <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-red-500">My Account</p>
-                <h1 className="mt-1 text-2xl font-semibold text-slate-900">My Orders</h1>
-            </div>
-
-            {orders.length === 0 ? (
-                <SectionState>No orders yet. <Link className="text-red-500" to={ROUTES.public.home}>Start shopping</Link></SectionState>
+        <AccountPageLayout pageTitle="My Orders" breadcrumbCurrent="My Orders">
+            {loading ? (
+                <SectionState>Loading your orders...</SectionState>
+            ) : error ? (
+                <SectionState variant="error">{error}</SectionState>
+            ) : orders.length === 0 ? (
+                <div className="flex min-h-[420px] items-center justify-center">
+                    <p className="text-[14px] font-normal uppercase tracking-[0.08em] text-[#999999]">
+                        No Orders Available
+                    </p>
+                </div>
             ) : (
-                orders.map((order) => (
-                    <div key={order._id} className="rounded-sm border border-slate-200 bg-white p-5 shadow-sm">
-                        <div className="flex flex-wrap justify-between gap-3">
-                            <div>
-                                <p className="font-semibold text-slate-900">Order #{order._id.slice(-8).toUpperCase()}</p>
-                                <p className="text-sm text-slate-500">{new Date(order.createdAt).toLocaleString("en-IN")}</p>
+                <div className="space-y-4">
+                    {orders.map((order) => (
+                        <div key={order._id} className="border border-[#e0e0e0] bg-white p-5">
+                            <div className="flex flex-wrap justify-between gap-3">
+                                <div>
+                                    <p className="text-[14px] font-normal text-[#333333]">
+                                        Order #{order._id.slice(-8).toUpperCase()}
+                                    </p>
+                                    <p className="mt-1 text-[12px] text-[#666666]">
+                                        {new Date(order.createdAt).toLocaleString("en-IN")}
+                                    </p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-[16px] font-normal text-[#e40046]">{formatCurrency(order.total_amount)}</p>
+                                    <p className="text-[11px] uppercase text-[#666666]">{order.order_status}</p>
+                                </div>
                             </div>
-                            <div className="text-right">
-                                <p className="text-lg font-semibold text-red-600">{formatCurrency(order.total_amount)}</p>
-                                <p className="text-xs uppercase text-slate-500">{order.order_status}</p>
+                            <div className="mt-4 flex flex-wrap gap-2">
+                                <Link
+                                    className="border border-[#e0e0e0] px-3 py-1.5 text-[12px] text-[#333333] hover:border-[#e40046] hover:text-[#e40046]"
+                                    to={ROUTES.customer.orderDetails.replace(":orderId", order._id)}
+                                >
+                                    View Details
+                                </Link>
+                                {order.order_status === "placed" && (
+                                    <button
+                                        className="border border-[#f5c2cf] px-3 py-1.5 text-[12px] text-[#e40046]"
+                                        onClick={() => handleCancel(order._id)}
+                                        type="button"
+                                    >
+                                        Cancel
+                                    </button>
+                                )}
+                                {["shipped", "delivered"].includes(order.order_status) && (
+                                    <button
+                                        className="border border-[#e0e0e0] px-3 py-1.5 text-[12px] text-[#333333]"
+                                        onClick={() => handleReturn(order._id)}
+                                        type="button"
+                                    >
+                                        Request Return
+                                    </button>
+                                )}
                             </div>
                         </div>
-                        <div className="mt-4 flex flex-wrap gap-2">
-                            <Link
-                                className="rounded-sm border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700"
-                                to={ROUTES.customer.orderDetails.replace(":orderId", order._id)}
-                            >
-                                View Details
-                            </Link>
-                            {order.order_status === "placed" && (
-                                <button className="rounded-sm border border-red-200 px-3 py-1.5 text-xs font-semibold text-red-600" onClick={() => handleCancel(order._id)} type="button">Cancel</button>
-                            )}
-                            {["shipped", "delivered"].includes(order.order_status) && (
-                                <button className="rounded-sm border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700" onClick={() => handleReturn(order._id)} type="button">Request Return</button>
-                            )}
-                        </div>
-                    </div>
-                ))
+                    ))}
+                </div>
             )}
-        </div>
+        </AccountPageLayout>
     );
 };
 

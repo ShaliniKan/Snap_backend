@@ -1,15 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import SectionState from "../../components/common/SectionState";
-import VendorGate from "../../routes/VendorGate";
 import { getCategories, getSubcategories } from "../../services/categoryService";
-import {
-    createProductVariant,
-    deleteProductVariant,
-    getVendorProducts,
-} from "../../services/vendorService";
-import { createVendorProductWithImage, updateVendorProductWithImage } from "../../services/productUploadService";
+import { deleteProductVariant, getVendorProducts } from "../../services/vendorService";
+import { createVendorProductWithImage, updateVendorProductWithImage, createVariantWithImage } from "../../services/productUploadService";
+import { resolveImageUrl } from "../../services/productService";
+import { getDefaultSizes } from "../../utils/productSizes";
 import { ROUTES } from "../../routes/routePaths";
+
+const resolvePreviewUrl = (value = "") => {
+    if (!value) return "";
+    if (value.startsWith("blob:") || value.startsWith("http")) return value;
+    return resolveImageUrl(value);
+};
 
 const emptyProduct = {
     name: "",
@@ -25,7 +28,6 @@ const emptyProduct = {
 const emptyVariant = {
     sku: "",
     color: "",
-    size: "",
     price: "",
     discount_price: "",
     stock_quantity: "",
@@ -37,6 +39,7 @@ const VendorProductForm = () => {
     const navigate = useNavigate();
     const [form, setForm] = useState(emptyProduct);
     const [variantForm, setVariantForm] = useState(emptyVariant);
+    const [selectedSizes, setSelectedSizes] = useState([]);
     const [variants, setVariants] = useState([]);
     const [subcategories, setSubcategories] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -44,7 +47,11 @@ const VendorProductForm = () => {
     const [error, setError] = useState("");
     const [successMessage, setSuccessMessage] = useState("");
     const [imageFile, setImageFile] = useState(null);
+    const [galleryFiles, setGalleryFiles] = useState([]);
     const [imagePreview, setImagePreview] = useState("");
+    const [galleryPreviews, setGalleryPreviews] = useState([]);
+    const [variantImageFile, setVariantImageFile] = useState(null);
+    const [variantImagePreview, setVariantImagePreview] = useState("");
 
     useEffect(() => {
         const loadFormData = async () => {
@@ -79,6 +86,7 @@ const VendorProductForm = () => {
                     });
                     setVariants(product.variants || []);
                     setImagePreview(product.images?.[0] || "");
+                    setGalleryPreviews((product.images || []).slice(1));
                 }
             } catch (err) {
                 setError(err.response?.data?.message || err.message || "Could not load product form.");
@@ -100,6 +108,21 @@ const VendorProductForm = () => {
         [form]
     );
 
+    const sizeOptions = useMemo(() => {
+        const subcategory = subcategories.find((entry) => entry._id === form.subcategory_id);
+
+        return getDefaultSizes({
+            name: form.name,
+            subcategoryName: subcategory?.itemName,
+        });
+    }, [form.name, form.subcategory_id, subcategories]);
+
+    const toggleSize = (size) => {
+        setSelectedSizes((current) =>
+            current.includes(size) ? current.filter((entry) => entry !== size) : [...current, size]
+        );
+    };
+
     const handleSaveProduct = async (event) => {
         event.preventDefault();
 
@@ -109,10 +132,15 @@ const VendorProductForm = () => {
             setSuccessMessage("");
 
             if (isEditing) {
-                await updateVendorProductWithImage(productId, payload, imageFile);
+                const updated = await updateVendorProductWithImage(productId, payload, imageFile, galleryFiles);
+                const updatedImages = updated?.images || [];
+                setImagePreview(updatedImages[0] || "");
+                setGalleryPreviews(updatedImages.slice(1));
+                setImageFile(null);
+                setGalleryFiles([]);
                 setSuccessMessage("Product updated successfully.");
             } else {
-                const created = await createVendorProductWithImage(payload, imageFile);
+                const created = await createVendorProductWithImage(payload, imageFile, galleryFiles);
                 setSuccessMessage("Product created successfully.");
                 navigate(ROUTES.vendor.productEdit.replace(":productId", created._id), { replace: true });
             }
@@ -131,18 +159,43 @@ const VendorProductForm = () => {
             return;
         }
 
+        if (selectedSizes.length === 0) {
+            setError("Select at least one size.");
+            return;
+        }
+
         try {
             setSaving(true);
             setError("");
-            const created = await createProductVariant(productId, {
-                ...variantForm,
-                price: Number(variantForm.price),
-                discount_price: variantForm.discount_price ? Number(variantForm.discount_price) : undefined,
-                stock_quantity: Number(variantForm.stock_quantity),
-            });
-            setVariants((current) => [...current, created]);
+
+            const createdVariants = [];
+
+            for (const size of selectedSizes) {
+                const created = await createVariantWithImage(
+                    productId,
+                    {
+                        ...variantForm,
+                        sku: selectedSizes.length > 1 ? `${variantForm.sku}-${size}` : variantForm.sku,
+                        size,
+                        price: Number(variantForm.price),
+                        discount_price: variantForm.discount_price ? Number(variantForm.discount_price) : undefined,
+                        stock_quantity: Number(variantForm.stock_quantity),
+                    },
+                    variantImageFile
+                );
+                createdVariants.push(created);
+            }
+
+            setVariants((current) => [...current, ...createdVariants]);
             setVariantForm(emptyVariant);
-            setSuccessMessage("Variant added.");
+            setSelectedSizes([]);
+            setVariantImageFile(null);
+            setVariantImagePreview("");
+            setSuccessMessage(
+                createdVariants.length > 1
+                    ? `${createdVariants.length} size variants added.`
+                    : "Variant added."
+            );
         } catch (err) {
             setError(err.response?.data?.message || "Could not add variant.");
         } finally {
@@ -164,7 +217,6 @@ const VendorProductForm = () => {
     }
 
     return (
-        <VendorGate requireApproval>
             <div className="space-y-6">
                 <div>
                     <p className="text-xs font-semibold uppercase tracking-[0.3em] text-red-500">Catalogue</p>
@@ -214,7 +266,7 @@ const VendorProductForm = () => {
                             <input className="mt-1 h-10 w-full rounded-sm border border-slate-200 px-3" type="number" min="0" value={form.discount_price} onChange={(e) => setForm({ ...form, discount_price: e.target.value })} />
                         </label>
                         <label className="block text-sm md:col-span-2">
-                            <span className="font-semibold text-slate-700">Product image</span>
+                            <span className="font-semibold text-slate-700">Main product image</span>
                             <input
                                 accept="image/*"
                                 className="mt-1 block w-full text-sm"
@@ -226,7 +278,28 @@ const VendorProductForm = () => {
                                 }}
                             />
                             {imagePreview && (
-                                <img alt="Preview" className="mt-3 h-32 w-32 rounded-sm border border-slate-200 object-cover" src={imagePreview.startsWith("blob:") || imagePreview.startsWith("http") ? imagePreview : `/${imagePreview.replace(/^\/+/, "")}`} />
+                                <img alt="Preview" className="mt-3 h-32 w-32 rounded-sm border border-slate-200 object-cover" src={resolvePreviewUrl(imagePreview)} />
+                            )}
+                        </label>
+                        <label className="block text-sm md:col-span-2">
+                            <span className="font-semibold text-slate-700">Additional gallery images</span>
+                            <input
+                                accept="image/*"
+                                className="mt-1 block w-full text-sm"
+                                multiple
+                                type="file"
+                                onChange={(event) => {
+                                    const files = Array.from(event.target.files || []);
+                                    setGalleryFiles(files);
+                                    setGalleryPreviews(files.map((file) => URL.createObjectURL(file)));
+                                }}
+                            />
+                            {(galleryPreviews.length > 0) && (
+                                <div className="mt-3 flex flex-wrap gap-2">
+                                    {galleryPreviews.map((preview, index) => (
+                                        <img key={`${preview}-${index}`} alt={`Gallery ${index + 1}`} className="h-20 w-20 rounded-sm border border-slate-200 object-cover" src={preview.startsWith("blob:") || preview.startsWith("http") ? preview : resolvePreviewUrl(preview)} />
+                                    ))}
+                                </div>
                             )}
                         </label>
                         <label className="block text-sm">
@@ -253,7 +326,16 @@ const VendorProductForm = () => {
                             <div className="space-y-2">
                                 {variants.map((variant) => (
                                     <div key={variant._id} className="flex flex-wrap items-center justify-between gap-3 rounded-sm border border-slate-100 px-3 py-2 text-sm">
-                                        <span>{variant.sku} · {variant.color || "Standard"} · {variant.size || "Free"} · ₹{variant.discount_price || variant.price} · Stock {variant.stock_quantity}</span>
+                                        <div className="flex items-center gap-3">
+                                            {variant.image && (
+                                                <img
+                                                    alt={`${variant.color || variant.sku} variant`}
+                                                    className="h-12 w-12 rounded-sm border border-slate-200 object-cover"
+                                                    src={resolvePreviewUrl(variant.image)}
+                                                />
+                                            )}
+                                            <span>{variant.sku} · {variant.color || "Standard"} · {variant.size || "Free"} · ₹{variant.discount_price || variant.price} · Stock {variant.stock_quantity}</span>
+                                        </div>
                                         <button className="text-xs font-semibold text-red-600" onClick={() => handleDeleteVariant(variant._id)} type="button">Remove</button>
                                     </div>
                                 ))}
@@ -263,16 +345,60 @@ const VendorProductForm = () => {
                         <form className="grid gap-3 md:grid-cols-3" onSubmit={handleAddVariant}>
                             <input className="h-10 rounded-sm border border-slate-200 px-3 text-sm" placeholder="SKU" value={variantForm.sku} onChange={(e) => setVariantForm({ ...variantForm, sku: e.target.value })} required />
                             <input className="h-10 rounded-sm border border-slate-200 px-3 text-sm" placeholder="Color" value={variantForm.color} onChange={(e) => setVariantForm({ ...variantForm, color: e.target.value })} />
-                            <input className="h-10 rounded-sm border border-slate-200 px-3 text-sm" placeholder="Size" value={variantForm.size} onChange={(e) => setVariantForm({ ...variantForm, size: e.target.value })} />
+                            <div className="md:col-span-3">
+                                <span className="mb-2 block text-sm font-semibold text-slate-700">Sizes</span>
+                                <div className="flex flex-wrap gap-2">
+                                    {sizeOptions.map((size) => {
+                                        const isSelected = selectedSizes.includes(size);
+
+                                        return (
+                                            <button
+                                                key={size}
+                                                type="button"
+                                                onClick={() => toggleSize(size)}
+                                                className={`min-w-[48px] rounded-sm border px-3 py-2 text-sm font-semibold transition ${
+                                                    isSelected
+                                                        ? "border-red-500 bg-red-50 text-red-600"
+                                                        : "border-slate-200 text-slate-700 hover:border-red-200 hover:text-red-600"
+                                                }`}
+                                            >
+                                                {size}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                                {selectedSizes.length > 0 && (
+                                    <p className="mt-2 text-xs text-slate-500">
+                                        Selected: {selectedSizes.join(", ")}
+                                    </p>
+                                )}
+                            </div>
                             <input className="h-10 rounded-sm border border-slate-200 px-3 text-sm" placeholder="Price" type="number" value={variantForm.price} onChange={(e) => setVariantForm({ ...variantForm, price: e.target.value })} required />
                             <input className="h-10 rounded-sm border border-slate-200 px-3 text-sm" placeholder="Discount price" type="number" value={variantForm.discount_price} onChange={(e) => setVariantForm({ ...variantForm, discount_price: e.target.value })} />
                             <input className="h-10 rounded-sm border border-slate-200 px-3 text-sm" placeholder="Stock" type="number" value={variantForm.stock_quantity} onChange={(e) => setVariantForm({ ...variantForm, stock_quantity: e.target.value })} required />
-                            <button className="rounded-sm bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 md:col-span-3 md:w-fit" disabled={saving} type="submit">Add Variant</button>
+                            <label className="block text-sm md:col-span-3">
+                                <span className="font-semibold text-slate-700">Variant image</span>
+                                <input
+                                    accept="image/*"
+                                    className="mt-1 block w-full text-sm"
+                                    type="file"
+                                    onChange={(event) => {
+                                        const file = event.target.files?.[0] || null;
+                                        setVariantImageFile(file);
+                                        setVariantImagePreview(file ? URL.createObjectURL(file) : "");
+                                    }}
+                                />
+                                {variantImagePreview && (
+                                    <img alt="Variant preview" className="mt-3 h-24 w-24 rounded-sm border border-slate-200 object-cover" src={variantImagePreview} />
+                                )}
+                            </label>
+                            <button className="rounded-sm bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 md:col-span-3 md:w-fit" disabled={saving} type="submit">
+                                {saving ? "Adding..." : selectedSizes.length > 1 ? `Add ${selectedSizes.length} Variants` : "Add Variant"}
+                            </button>
                         </form>
                     </div>
                 )}
             </div>
-        </VendorGate>
     );
 };
 

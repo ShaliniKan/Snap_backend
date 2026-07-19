@@ -54,14 +54,14 @@ export const CartProvider = ({ children }) => {
         setError("");
     }, []);
 
-    const addItem = useCallback(async ({ productId, variantId, quantity = 1 }) => {
+    const addItem = useCallback(async ({ productId, variantId, quantity = 1, size = "", color = "" }) => {
         const productKey = buildCartProductKey({ productId, variantId });
 
         try {
             setAddingProductKey(productKey);
             setError("");
             setSuccessMessage("");
-            await addToCart({ productId, variantId, quantity });
+            await addToCart({ productId, variantId, quantity, size, color });
             const data = await getCart();
             setCart(data);
             setModalOpen(true);

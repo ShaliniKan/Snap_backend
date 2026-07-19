@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import SectionState from "../../components/common/SectionState";
-import VendorGate from "../../routes/VendorGate";
 import { deleteVendorProduct, getVendorProducts } from "../../services/vendorService";
 import { ROUTES } from "../../routes/routePaths";
 
@@ -49,7 +48,6 @@ const VendorProducts = () => {
     };
 
     return (
-        <VendorGate requireApproval>
             <div className="space-y-6">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
@@ -113,7 +111,6 @@ const VendorProducts = () => {
                     </div>
                 )}
             </div>
-        </VendorGate>
     );
 };
 

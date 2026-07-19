@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import SectionState from "../../components/common/SectionState";
-import VendorGate from "../../routes/VendorGate";
 import { getVendorOrders, updateVendorOrderStatus } from "../../services/vendorService";
 
 const formatCurrency = (value = 0) =>
@@ -45,7 +44,6 @@ const VendorOrders = () => {
     };
 
     return (
-        <VendorGate requireApproval>
             <div className="space-y-6">
                 <div>
                     <p className="text-xs font-semibold uppercase tracking-[0.3em] text-red-500">Fulfillment</p>
@@ -108,7 +106,6 @@ const VendorOrders = () => {
                     </div>
                 )}
             </div>
-        </VendorGate>
     );
 };
 

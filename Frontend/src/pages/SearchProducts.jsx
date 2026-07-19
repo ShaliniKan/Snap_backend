@@ -1,10 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import TopHeader from "../components/layout/TopHeader";
-import Navbar from "../components/layout/Navbar";
 import SectionState from "../components/common/SectionState";
-import ProductGrid from "../components/product/ProductGrid";
-import ProductGridSkeleton from "../components/product/ProductGridSkeleton";
+import ListingProductGrid from "../components/product/ListingProductGrid";
+import ListingGridSkeleton from "../components/product/ListingGridSkeleton";
 import { getProducts } from "../services/productService";
 
 const sortOptions = [
@@ -58,22 +56,16 @@ const SearchProducts = () => {
     }, [searchQuery]);
 
     return (
-        <div className="min-h-screen bg-slate-50">
-            <TopHeader />
-            <Navbar />
-
-            <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-                <div className="flex flex-col gap-4 border-b border-slate-200 pb-4 sm:flex-row sm:items-end sm:justify-between">
-                    <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-red-500">Search</p>
-                        <h1 className="mt-2 text-2xl font-semibold text-slate-900">{pageTitle}</h1>
+        <main className="mx-auto max-w-page bg-white px-4 py-6 sm:px-6 lg:px-8">
+            <div className="flex flex-col gap-4 border-b border-slate-200 pb-4 sm:flex-row sm:items-end sm:justify-between">                    <div>
+                        <h1 className="text-2xl font-normal text-slate-900">{pageTitle}</h1>
                         {!loading && (
                             <p className="mt-1 text-sm text-slate-500">{products.length} product(s) found</p>
                         )}
                     </div>
 
-                    <div className="flex items-center gap-2">
-                        <label className="text-sm text-slate-600" htmlFor="search-sort">Sort by</label>
+                    <div className="flex items-center gap-2 text-sm text-slate-600">
+                        <span>Sort by:</span>
                         <select
                             id="search-sort"
                             value={sort}
@@ -82,7 +74,7 @@ const SearchProducts = () => {
                                 nextParams.set("sort", event.target.value);
                                 setSearchParams(nextParams);
                             }}
-                            className="rounded-sm border border-slate-200 px-3 py-2 text-sm text-slate-700"
+                            className="rounded-sm border border-slate-300 px-3 py-1.5 text-sm text-slate-700"
                         >
                             {sortOptions.map((option) => (
                                 <option key={option.value} value={option.value}>{option.label}</option>
@@ -93,20 +85,19 @@ const SearchProducts = () => {
 
                 <div className="mt-6">
                     {loading ? (
-                        <ProductGridSkeleton count={8} />
+                        <ListingGridSkeleton count={8} />
                     ) : error ? (
                         <SectionState variant="error">{error}</SectionState>
                     ) : products.length === 0 ? (
-                        <div className="rounded-sm border border-slate-200 bg-white p-10 text-center shadow-sm">
+                        <div className="py-12 text-center">
                             <h2 className="text-lg font-semibold text-slate-900">No products found</h2>
                             <p className="mt-2 text-sm text-slate-500">Try a different search term or browse categories from the home page.</p>
                         </div>
                     ) : (
-                        <ProductGrid products={products} />
+                        <ListingProductGrid products={products} />
                     )}
                 </div>
-            </main>
-        </div>
+        </main>
     );
 };
 

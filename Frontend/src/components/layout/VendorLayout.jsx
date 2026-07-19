@@ -7,13 +7,16 @@ const navItems = [
     { label: "Dashboard", to: ROUTES.vendor.dashboard },
     { label: "Products", to: ROUTES.vendor.products },
     { label: "Orders", to: ROUTES.vendor.orders },
+    { label: "Platform", to: ROUTES.vendor.platform },
+    { label: "All Orders", to: ROUTES.vendor.allOrders },
+    { label: "Coupons", to: ROUTES.vendor.coupons },
+    { label: "Returns", to: ROUTES.vendor.returns },
     { label: "Profile", to: ROUTES.vendor.profile },
 ];
 
 const VendorLayout = () => {
-    const { user, logout } = useAuth();
+    const { logout } = useAuth();
     const navigate = useNavigate();
-    const isApproved = user?.approvalStatus === "approved";
 
     const handleLogout = () => {
         logout();
@@ -42,12 +45,6 @@ const VendorLayout = () => {
                     </div>
                 </div>
             </header>
-
-            {!isApproved && (
-                <div className="border-b border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 sm:px-6 lg:px-8">
-                    Your seller account is <strong>{user?.approvalStatus || "pending"}</strong>. Complete your profile and wait for admin approval to manage products.
-                </div>
-            )}
 
             <div className="mx-auto flex w-full max-w-7xl flex-1 gap-6 px-4 py-6 sm:px-6 lg:px-8">
                 <aside className="hidden w-56 shrink-0 md:block">

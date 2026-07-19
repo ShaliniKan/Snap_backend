@@ -29,3 +29,8 @@ export const setDefaultCustomerAddress = async (addressId) => {
     const response = await api.put(`/api/customer/addresses/${addressId}/default`);
     return response.data?.data || response.data;
 };
+
+export const changeCustomerPassword = async (newPassword) => {
+    const response = await api.put("/api/customer/change-password", { newPassword });
+    return response.data;
+};

@@ -20,30 +20,63 @@ const calculateDiscount = (price, discountPrice) => {
     return Math.round(((price - discountPrice) / price) * 100);
 };
 
-const resolveImageUrl = (value = "") => {
-    if (!value) return "/banner1.jpg";
-    if (value.startsWith("http") || value.startsWith("/")) return value;
-    return `/${value.replace(/^\/+/, "")}`;
+export const resolveImageUrl = (value = "") => {
+    if (!value || !String(value).trim()) return "/banner1.jpg";
+
+    let normalized = String(value).trim().replace(/\\/g, "/");
+
+    if (normalized.startsWith("http://") || normalized.startsWith("https://")) {
+        return normalized;
+    }
+
+    if (normalized.startsWith("upload/")) {
+        normalized = `uploads/${normalized.slice("upload/".length)}`;
+    }
+
+    if (!normalized.startsWith("/")) {
+        normalized = `/${normalized}`;
+    }
+
+    return normalized;
+};
+
+export const getProductPrimaryImage = (product) => {
+    const productLevelImage =
+        product?.images?.[0] || product?.image || product?.thumbnail || product?.productImage;
+
+    if (productLevelImage) {
+        return resolveImageUrl(productLevelImage);
+    }
+
+    const variant = getPrimaryVariant(product);
+    return variant?.image ? resolveImageUrl(variant.image) : "/banner1.jpg";
 };
 
 export const normalizeProduct = (product) => {
-    const variant = getPrimaryVariant(product);
+    const normalizedVariants = (product.variants || product.variant || []).map((entry) => ({
+        ...entry,
+        image: entry.image ? resolveImageUrl(entry.image) : null,
+    }));
+    const variant = getPrimaryVariant({ ...product, variants: normalizedVariants });
+    const primaryImage = getProductPrimaryImage({ ...product, variants: normalizedVariants });
     const price = product.price || variant.price || 999;
     const sellingPrice = product.discount_price || product.discountPrice || variant.discount_price || variant.discountPrice || price;
-    const rawImage = product.image || product.images?.[0] || product.thumbnail || product.productImage || "/banner1.jpg";
+    const normalizedImages = (product.images || [])
+        .filter(Boolean)
+        .map(resolveImageUrl);
 
     return {
         ...product,
         primaryVariant: variant,
         variantId: product.variant_id || product.variantId || variant._id,
-        image: resolveImageUrl(rawImage),
-        images: product.images?.length ? product.images.map(resolveImageUrl) : [resolveImageUrl(rawImage)],
+        image: primaryImage,
+        images: normalizedImages.length > 0 ? normalizedImages : [primaryImage],
         price,
         sellingPrice,
         discount: product.discount || calculateDiscount(price, sellingPrice),
         rating: product.rating || product.averageRating || 4.1,
         ratingCount: product.ratingCount || product.reviewsCount || 0,
-        variants: product.variants || product.variant || [],
+        variants: normalizedVariants,
     };
 };
 

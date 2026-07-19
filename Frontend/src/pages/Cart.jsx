@@ -4,6 +4,7 @@ import SectionState from "../components/common/SectionState";
 import CheckoutModal from "../components/checkout/CheckoutModal";
 import useCart from "../hooks/useCart";
 import { useCartContext } from "../context/CartContext";
+import { getCartItemAttributesLine } from "../utils/cartHelpers";
 
 const formatCurrency = (value = 0) => {
     return new Intl.NumberFormat("en-IN", {
@@ -116,8 +117,8 @@ const Cart = () => {
 
                                         <div className="min-w-0">
                                             <h3 className="line-clamp-2 text-sm font-semibold leading-5 text-slate-900">{productName}</h3>
-                                            <p className="mt-1 text-xs text-slate-500">
-                                                {item.variant_id?.color || "Standard"} {item.variant_id?.size ? `- ${item.variant_id.size}` : ""}
+                                            <p className="mt-1 text-[12px] leading-[18px] text-[#757575]">
+                                                {getCartItemAttributesLine(item)}
                                             </p>
                                             <p className="mt-3 text-base font-semibold text-slate-900">{formatCurrency(item.price)}</p>
 

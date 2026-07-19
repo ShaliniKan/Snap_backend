@@ -1,4 +1,4 @@
-export const PRIORITY_CATEGORIES = ["men", "women", "kids"];
+const PRIORITY_CATEGORIES = ["men", "women", "kids"];
 
 const normalizeName = (name = "") => String(name).trim().toLowerCase();
 
@@ -33,12 +33,16 @@ export const sortRootCategories = (categories = []) =>
 export const getCategoryImage = (categoryName = "") => {
     const normalizedName = normalizeName(categoryName);
 
-    if (normalizedName.includes("men")) return "/men.jpg";
     if (normalizedName.includes("women")) return "/women.jpg";
-    if (normalizedName.includes("kid")) return "/banner2.jpg";
-    if (normalizedName.includes("electronic")) return "/banner1.jpg";
-    if (normalizedName.includes("beauty")) return "/banner2.jpg";
-    if (normalizedName.includes("footwear")) return "/banner1.jpg";
+    if (normalizedName.includes("men")) return "/men1.jpg";
+    if (normalizedName.includes("kid")) return "/kid.jpg";
+    if (normalizedName.includes("electronic")) return "/electronic.jpg";
+    if (normalizedName.includes("beauty")) return "/beauty.jpg";
+    if (normalizedName.includes("footwear")) return "/footwear1.jpg";
+    if (normalizedName.includes("home & kitchen")) return "/home&kitchen.jpg";
+    if (normalizedName.includes("home furnishing")) return "/homefurniture.jpg";
+    if (normalizedName.includes("mobiles accessories")) return "/mobileaccessories.jpg";
+    if (normalizedName.includes("watches")) return "/watches.jpg";
 
     return "/banner1.jpg";
 };

@@ -1,5 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { getSubcategories } from "../../services/categoryService";
 import MegaMenu from "./MegaMenu";
 import useCategories from "../../hooks/useCategories";
@@ -12,12 +11,14 @@ const CategoryBar = ({ className = "" }) => {
     const [subcategoriesByCategory, setSubcategoriesByCategory] = useState({});
     const [loadingCategoryId, setLoadingCategoryId] = useState("");
     const [subcategoryError, setSubcategoryError] = useState("");
+    const [menuLeft, setMenuLeft] = useState(0);
     const closeTimerRef = useRef(null);
+    const wrapperRef = useRef(null);
+    const categoryRefs = useRef({});
 
-    const containerClassName = `flex items-center gap-4 overflow-x-auto bg-white px-4 py-3 text-sm font-medium sm:px-6 lg:px-12 ${className}`;
+    const containerClassName = `flex items-center gap-4 overflow-x-auto bg-white px-3 py-3 text-sm font-medium [scrollbar-width:none] sm:px-4 lg:px-6 [&::-webkit-scrollbar]:hidden ${className}`;
     const activeCategoryId = activeCategory?._id;
     const activeSubcategories = activeCategoryId ? subcategoriesByCategory[activeCategoryId] || [] : [];
-
     const clearCloseTimer = useCallback(() => {
         if (closeTimerRef.current) {
             window.clearTimeout(closeTimerRef.current);
@@ -40,7 +41,7 @@ const CategoryBar = ({ className = "" }) => {
     }, [clearCloseTimer]);
 
     const loadSubcategories = useCallback(async (categoryId) => {
-        if (subcategoriesByCategory[categoryId]) {
+        if (Array.isArray(subcategoriesByCategory[categoryId]) && subcategoriesByCategory[categoryId].length > 0) {
             return;
         }
 
@@ -59,15 +60,48 @@ const CategoryBar = ({ className = "" }) => {
         }
     }, [subcategoriesByCategory]);
 
-    const openMegaMenu = useCallback((category) => {
-        clearCloseTimer();
-        setActiveCategory(category);
-        setIsMegaMenuOpen(true);
-        loadSubcategories(category._id);
-    }, [clearCloseTimer, loadSubcategories]);
+    const updateMenuPosition = useCallback((categoryId) => {
+        const categoryEl = categoryRefs.current[categoryId];
+        const wrapperEl = wrapperRef.current;
 
-    useEffect(() => {
-        const handleKeyDown = (event) => {
+        if (!categoryEl || !wrapperEl) {
+            return;
+        }
+
+        const categoryRect = categoryEl.getBoundingClientRect();
+        const wrapperRect = wrapperEl.getBoundingClientRect();
+        setMenuLeft(categoryRect.left - wrapperRect.left);
+    }, []);
+
+    const openMegaMenu = useCallback(
+        (category) => {
+            clearCloseTimer();
+            setActiveCategory(category);
+            setIsMegaMenuOpen(true);
+            loadSubcategories(category._id);
+            updateMenuPosition(category._id);
+        },
+        [clearCloseTimer, loadSubcategories, updateMenuPosition]
+    );
+
+    useLayoutEffect(() => {
+        if (!isMegaMenuOpen || !activeCategoryId) {
+            return undefined;
+        }
+
+        const handleReposition = () => updateMenuPosition(activeCategoryId);
+
+        handleReposition();
+        window.addEventListener("resize", handleReposition);
+        window.addEventListener("scroll", handleReposition, true);
+
+        return () => {
+            window.removeEventListener("resize", handleReposition);
+            window.removeEventListener("scroll", handleReposition, true);
+        };
+    }, [activeCategoryId, isMegaMenuOpen, updateMenuPosition]);
+
+    useEffect(() => {        const handleKeyDown = (event) => {
             if (event.key === "Escape") {
                 closeMegaMenu();
             }
@@ -83,7 +117,7 @@ const CategoryBar = ({ className = "" }) => {
 
     if (loading) {
         return (
-            <div className={`bg-white px-4 py-3 text-sm font-medium text-slate-500 sm:px-6 lg:px-12 ${className}`}>
+            <div className={`bg-white px-3 py-3 text-sm font-medium text-slate-500 sm:px-4 lg:px-6 ${className}`}>
                 Loading categories...
             </div>
         );
@@ -91,7 +125,7 @@ const CategoryBar = ({ className = "" }) => {
 
     if (error) {
         return (
-            <div className={`bg-white px-4 py-3 text-sm font-medium text-red-500 sm:px-6 lg:px-12 ${className}`}>
+            <div className={`bg-white px-3 py-3 text-sm font-medium text-red-500 sm:px-4 lg:px-6 ${className}`}>
                 Categories unavailable
             </div>
         );
@@ -99,53 +133,53 @@ const CategoryBar = ({ className = "" }) => {
 
     if (categories.length === 0) {
         return (
-            <div className={`bg-white px-4 py-3 text-sm font-medium text-slate-500 sm:px-6 lg:px-12 ${className}`}>
+            <div className={`bg-white px-3 py-3 text-sm font-medium text-slate-500 sm:px-4 lg:px-6 ${className}`}>
                 No categories available
             </div>
         );
     }
 
     return (
-        <div className="relative" onMouseLeave={scheduleCloseMegaMenu}>
+        <div className="relative" onMouseLeave={scheduleCloseMegaMenu} ref={wrapperRef}>
             <div className={containerClassName} onMouseEnter={clearCloseTimer}>
                 {categories.map((category) => {
                     const isActive = activeCategoryId === category._id && isMegaMenuOpen;
 
                     return (
-                        <Link
-                            aria-controls="category-mega-menu"
-                            aria-expanded={isActive}
-                            aria-haspopup="menu"
+                        <div
                             key={category._id}
-                            onFocus={() => openMegaMenu(category)}
-                            onMouseEnter={() => openMegaMenu(category)}
-                            to={`/categories/${category._id}`}
-                            className={`flex shrink-0 items-center gap-2 rounded-sm px-3 py-2 transition focus:outline-none focus:ring-2 focus:ring-red-100 ${
-                                isActive ? "bg-red-50 text-red-500" : "hover:bg-slate-50 hover:text-red-500"
+                            ref={(element) => {
+                                categoryRefs.current[category._id] = element;
+                            }}
+                            className={`flex shrink-0 items-center gap-2 px-3 py-2 transition ${
+                                isActive ? "text-brand-accent" : "text-slate-900 hover:text-brand-accent"
                             }`}
-                        >
-                            <img
+                            onMouseEnter={() => openMegaMenu(category)}
+                        >                            <img
                                 src={getCategoryImage(category.itemName)}
                                 alt=""
-                                className="h-9 w-9 rounded-full border border-gray-200 object-cover"
+                                className={`h-9 w-9 rounded-full object-cover ${
+                                    isActive ? "border-2 border-brand-accent" : "border border-gray-200"
+                                }`}
                             />
-                            {category.itemName}
-                        </Link>
+                            <span className="text-[16px] font-extrabold leading-6">{category.itemName}</span>
+                        </div>
                     );
                 })}
             </div>
 
             <MegaMenu
                 activeCategory={activeCategory}
+                anchorLeft={menuLeft}
                 error={subcategoryError}
                 isOpen={isMegaMenuOpen}
                 loading={loadingCategoryId === activeCategoryId}
                 onMouseEnter={clearCloseTimer}
                 onMouseLeave={scheduleCloseMegaMenu}
+                onNavigate={closeMegaMenu}
                 subcategories={activeSubcategories}
             />
         </div>
     );
 };
-
 export default CategoryBar;

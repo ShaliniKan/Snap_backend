@@ -10,10 +10,14 @@ export const ROUTES = {
     customer: {
         root: "/customer",
         cart: "/customer/cart",
-        checkout: "/customer/checkout",
         orders: "/customer/orders",
         orderDetails: "/customer/orders/:orderId",
-        profile: "/customer/profile",
+        savedCards: "/customer/saved-cards",
+        changePassword: "/customer/change-password",
+        addresses: "/customer/addresses",
+        addressNew: "/customer/addresses/new",
+        addressEdit: "/customer/addresses/:addressId/edit",
+        giftVoucher: "/customer/gift-voucher",
     },
     vendor: {
         root: "/vendor",
@@ -23,20 +27,14 @@ export const ROUTES = {
         productEdit: "/vendor/products/:productId/edit",
         orders: "/vendor/orders",
         profile: "/vendor/profile",
-    },
-    admin: {
-        root: "/admin",
-        dashboard: "/admin/dashboard",
-        orders: "/admin/orders",
-        vendors: "/admin/vendors",
-        coupons: "/admin/coupons",
-        returns: "/admin/returns",
+        platform: "/vendor/platform",
+        allOrders: "/vendor/all-orders",
+        coupons: "/vendor/coupons",
+        returns: "/vendor/returns",
     },
 };
 
 export const USER_ROLES = {
     customer: "customer",
-    user: "user",
     vendor: "vendor",
-    admin: "admin",
 };

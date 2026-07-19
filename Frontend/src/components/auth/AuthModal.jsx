@@ -16,6 +16,7 @@ const AuthModal = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const {
         authModal,
+        authIntent,
         closeAuthModal,
         openLogin,
         openRegister,
@@ -38,7 +39,7 @@ const AuthModal = () => {
 
     useEffect(() => {
         if (searchParams.get("login") === "1") {
-            openLogin();
+            openLogin(searchParams.get("vendor") === "1" ? "vendor" : "customer");
             setSearchParams({}, { replace: true });
         }
     }, [searchParams, setSearchParams, openLogin]);
@@ -58,17 +59,8 @@ const AuthModal = () => {
     }, [isOpen]);
 
     const redirectAfterAuth = (sessionUser) => {
-        if (sessionUser?.role === USER_ROLES.admin) {
-            navigate(ROUTES.admin.dashboard);
-            return;
-        }
-
         if (sessionUser?.role === USER_ROLES.vendor) {
-            navigate(
-                sessionUser.approvalStatus === "approved"
-                    ? ROUTES.vendor.dashboard
-                    : ROUTES.vendor.profile
-            );
+            navigate(ROUTES.vendor.dashboard);
         }
     };
 
@@ -171,7 +163,11 @@ const AuthModal = () => {
             onSwitchToRegister={() => {
                 setAuthError("");
                 setAuthMessage("");
-                openRegister();
+                if (authIntent === "vendor") {
+                    openRegisterVendor();
+                } else {
+                    openRegister("customer");
+                }
             }}
             onSubmit={handleLogin}
             formData={authData}
@@ -179,6 +175,8 @@ const AuthModal = () => {
             isSubmitting={isSubmitting || authLoading}
             error={authError}
             message={authMessage}
+            subtitle={authIntent === "vendor" ? "Seller account" : "Welcome back"}
+            title={authIntent === "vendor" ? "Seller Login" : "Login"}
         />
     );
 };

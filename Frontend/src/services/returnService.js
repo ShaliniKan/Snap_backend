@@ -1,16 +1,11 @@
 import api from "./api";
 
-export const getMyReturns = async () => {
-    const response = await api.get("/api/returns/my");
-    return response.data?.data || [];
-};
-
 export const createReturnRequest = async (orderId, reason) => {
     const response = await api.post(`/api/returns/order/${orderId}`, { reason });
     return response.data?.data;
 };
 
-export const getAdminReturns = async () => {
+export const getVendorReturns = async () => {
     const response = await api.get("/api/returns");
     return response.data?.data || [];
 };

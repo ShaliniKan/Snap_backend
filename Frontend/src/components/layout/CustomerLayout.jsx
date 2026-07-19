@@ -1,19 +1,19 @@
 import { Outlet } from "react-router-dom";
-import Footer from "./Footer";
+import { SiteFooterBottom, TrustBadgesBar } from "./HomeFooter";
 import Navbar from "./Navbar";
 import TopHeader from "./TopHeader";
 
 const CustomerLayout = () => {
     return (
-        <div className="flex min-h-screen flex-col bg-slate-50">
-            <TopHeader />
-            <Navbar />
+        <div className="flex min-h-screen flex-col bg-page">            <TopHeader variant="store" />
+            <Navbar variant="store" showCategoryBar={false} />
 
-            <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8">
+            <main className="mx-auto w-full max-w-page flex-1 px-4 py-5 sm:px-6 lg:px-8">
                 <Outlet />
             </main>
 
-            <Footer />
+            <TrustBadgesBar productStyle />
+            <SiteFooterBottom productStyle showSubscribe showSeo={false} />
         </div>
     );
 };
