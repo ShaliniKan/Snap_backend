@@ -7,7 +7,14 @@ const {loginUser} = require("../controllers/loginUser");
 
 router.post("/register", registerUser);
 router.post("/register/customer", registerUser);
-router.post("/register/vendor", registerUser);
+router.post("/register/vendor", (req, res) => {
+    req.body = {
+        ...req.body,
+        role: "vendor",
+        accountType: "vendor",
+    };
+    return registerUser(req, res);
+});
 router.post("/login", loginUser);
 
 

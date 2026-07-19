@@ -1,5 +1,6 @@
 const Categories = require("../Modules/Categories");
-const { buildCategoryResponse, sortRootCategories } = require("../utils/categoryHelpers");
+const Product = require("../Modules/Product");
+const { buildCategoryResponse, sortRootCategories, matchParentCategoryId, toObjectId } = require("../utils/categoryHelpers");
 
 const getAllCategories = async(req,res) => {
     try{
@@ -36,7 +37,7 @@ const getCategoryWithChildren = async (req, res) => {
             return res.status(404).json({ success: false, message: "Category not found" });
         }
 
-        const children = await Categories.find({ parentCategoryId: category._id }).sort({ itemName: 1 });
+        const children = await Categories.find(matchParentCategoryId(category._id)).sort({ itemName: 1 });
         res.status(200).json(buildCategoryResponse(category.toObject ? category.toObject() : category, children));
     } catch (error) {
         res.status(500).json({
@@ -46,14 +47,40 @@ const getCategoryWithChildren = async (req, res) => {
     }
 };
 
-const getSubCategories = async(req,res)=> {
-    try{
-        const subCategories = await Categories.find({parentCategoryId: req.params.id}).sort({ itemName: 1 });
-        res.status(200).json(subCategories);
-    } catch(error){
+const getSubCategories = async (req, res) => {
+    try {
+        const subCategories = await Categories.find(matchParentCategoryId(req.params.id))
+            .sort({ itemName: 1 })
+            .lean();
+
+        const subcategoryIds = subCategories.map((entry) => entry._id);
+        const productCounts = subcategoryIds.length
+            ? await Product.aggregate([
+                {
+                    $match: {
+                        subcategory_id: { $in: subcategoryIds },
+                        status: { $ne: "inactive" },
+                    },
+                },
+                { $group: { _id: "$subcategory_id", count: { $sum: 1 } } },
+            ])
+            : [];
+
+        const countMap = productCounts.reduce((map, entry) => {
+            map[entry._id.toString()] = entry.count;
+            return map;
+        }, {});
+
+        res.status(200).json(
+            subCategories.map((subcategory) => ({
+                ...subcategory,
+                productCount: countMap[subcategory._id.toString()] || 0,
+            }))
+        );
+    } catch (error) {
         res.status(500).json({
             success: false,
-            message: error.message
+            message: error.message,
         });
     }
 };
@@ -76,7 +103,10 @@ const createCategory = async(req,res)=> {
 
 const createSubcategory = async(req,res)=> {
     try{
-        const createCategory = await Categories.create({...req.body, parentCategoryId: req.params.id});
+        const createCategory = await Categories.create({
+            ...req.body,
+            parentCategoryId: toObjectId(req.params.id),
+        });
         res.status(201).json({
             success: true,
             message: "SubCategory is created successfully",
@@ -126,7 +156,7 @@ const deleteCategory = async(req,res)=> {
     if(!deleteCategory){
        return res.status(404).json({success: false, message: "Category not found"}); 
     }
-    const subcategories = await Categories.find({parentCategoryId: deleteCategory._id});
+    const subcategories = await Categories.find(matchParentCategoryId(deleteCategory._id));
     if(subcategories.length>0){
         return res.status(404).json({success: false, message: "Cannot delete category. Delete its subcategories first."});
     }

@@ -20,7 +20,6 @@ const registerUser = async (req, res) => {
                 lastName: user.lastName,
                 email: user.email,
                 role: user.role,
-                approvalStatus: user.approvalStatus || undefined,
             },
         });
     } catch (error) {

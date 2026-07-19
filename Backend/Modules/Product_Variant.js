@@ -20,6 +20,10 @@ const variantSchema = mongoose.Schema({
     stock_quantity: {
         type: Number,
         default: 0
+    },
+    image: {
+        type: String,
+        default: ""
     }
     
 },{

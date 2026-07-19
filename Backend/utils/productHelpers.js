@@ -1,4 +1,60 @@
 const DEFAULT_SELLING_PRICE = 999;
+const FALLBACK_IMAGE = "/banner1.jpg";
+const { matchParentCategoryId } = require("./categoryHelpers");
+
+const normalizeImagePath = (value = "") => {
+  if (!value || !String(value).trim()) {
+    return null;
+  }
+
+  let normalized = String(value).trim().replace(/\\/g, "/");
+
+  if (normalized.startsWith("http://") || normalized.startsWith("https://")) {
+    return normalized;
+  }
+
+  if (normalized.startsWith("upload/")) {
+    normalized = `uploads/${normalized.slice("upload/".length)}`;
+  }
+
+  if (!normalized.startsWith("/")) {
+    normalized = `/${normalized}`;
+  }
+
+  return normalized;
+};
+
+const formatProductImages = (images = []) => {
+  const formatted = (Array.isArray(images) ? images : [])
+    .map(normalizeImagePath)
+    .filter(Boolean);
+
+  return formatted.length > 0 ? formatted : [FALLBACK_IMAGE];
+};
+
+const formatVariantRecord = (variant) => {
+  const record = variant?.toObject ? variant.toObject() : { ...variant };
+  const image = normalizeImagePath(record.image);
+
+  return {
+    ...record,
+    image: image || null,
+  };
+};
+
+const formatVariantList = (variants = []) =>
+  (Array.isArray(variants) ? variants : []).map(formatVariantRecord);
+
+const formatProductRecord = (product) => {
+  const record = product?.toObject ? product.toObject() : { ...product };
+  const images = formatProductImages(record.images);
+
+  return {
+    ...record,
+    images,
+    image: images[0],
+  };
+};
 
 const resolveSellingPrice = (product = {}, variant = null) => {
   if (variant) {
@@ -98,12 +154,12 @@ const buildSort = (sort = "popularity") => {
   }
 };
 
-const resolveCategoryFilter = async (Categories, categoryId) => {
+const resolveCategoryFilter = async (CategoriesModel, categoryId) => {
   if (!categoryId) {
     return null;
   }
 
-  const subcategories = await Categories.find({ parentCategoryId: categoryId }).select("_id");
+  const subcategories = await CategoriesModel.find(matchParentCategoryId(categoryId)).select("_id");
 
   if (subcategories.length > 0) {
     return subcategories.map((entry) => entry._id);
@@ -117,5 +173,11 @@ module.exports = {
   buildSort,
   resolveCategoryFilter,
   resolveSellingPrice,
+  normalizeImagePath,
+  formatProductImages,
+  formatProductRecord,
+  formatVariantRecord,
+  formatVariantList,
   DEFAULT_SELLING_PRICE,
+  FALLBACK_IMAGE,
 };

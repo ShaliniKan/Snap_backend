@@ -14,6 +14,11 @@ gender: {
     enum: ["male","female","other"],
 },
 addresses: [{
+    fullName: {
+        type: String,
+        trim: true,
+        maxlength: 100,
+    },
     addressType: {
         type: String,
         enum: ["home", "work","other"],
@@ -57,6 +62,17 @@ addresses: [{
     phoneNumber: {
             type: String,
             match: /^[6-9][0-9]{9}$/
+        },
+
+    alternatePhoneNumber: {
+            type: String,
+            trim: true,
+            validate: {
+                validator(value) {
+                    return !value || /^[6-9][0-9]{9}$/.test(value);
+                },
+                message: "Alternate phone number must be a valid 10-digit mobile number",
+            },
         },
 
     isDefault: {

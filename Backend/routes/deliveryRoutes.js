@@ -5,7 +5,7 @@ const { authUser } = require("../Middleware/auth");
 const { authRole } = require("../Middleware/authRole");
 
 router.get("/pincode/:pincode", deliveryController.validatePincode);
-router.get("/", authUser, authRole("admin"), deliveryController.listDeliveryZones);
-router.post("/", authUser, authRole("admin"), deliveryController.createDeliveryZone);
+router.get("/", authUser, authRole("vendor"), deliveryController.listDeliveryZones);
+router.post("/", authUser, authRole("vendor"), deliveryController.createDeliveryZone);
 
 module.exports = router;

@@ -16,7 +16,6 @@ const couponRoutes = require("./routes/couponRoutes");
 const deliveryRoutes = require("./routes/deliveryRoutes");
 const returnRoutes = require("./routes/returnRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
-const adminRoutes = require("./routes/adminRoutes");
 
 //start
 const app = express();
@@ -38,7 +37,6 @@ app.use("/api/coupons", couponRoutes);
 app.use("/api/delivery", deliveryRoutes);
 app.use("/api/returns", returnRoutes);
 app.use("/api/payment", paymentRoutes);
-app.use("/api/admin", adminRoutes);
 app.use("/uploads", express.static("uploads"));
 
 

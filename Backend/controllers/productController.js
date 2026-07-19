@@ -4,17 +4,52 @@ const Variant = require('../Modules/Product_Variant');
 
 const Categories = require('../Modules/Categories');
 
-const { buildProductQuery, buildSort, resolveCategoryFilter } = require('../utils/productHelpers');
+const { buildProductQuery, buildSort, resolveCategoryFilter, formatProductRecord, formatVariantList, normalizeImagePath } = require('../utils/productHelpers');
 
 const { getUserId, assertProductOwnership } = require('../utils/vendorHelpers');
 
+const collectUploadedImages = (req, existingImages = [], options = {}) => {
+    const { replaceMainImage = false } = options;
+    const images = [...existingImages];
 
+    if (req.files?.image?.[0]) {
+        const newMain = normalizeImagePath(req.files.image[0].path.replace(/\\/g, "/"));
+
+        if (replaceMainImage) {
+            if (images.length > 0) {
+                images[0] = newMain;
+            } else {
+                images.push(newMain);
+            }
+        } else {
+            images.unshift(newMain);
+        }
+    } else if (req.file) {
+        const newMain = normalizeImagePath(req.file.path.replace(/\\/g, "/"));
+
+        if (replaceMainImage && images.length > 0) {
+            images[0] = newMain;
+        } else {
+            images.unshift(newMain);
+        }
+    }
+
+    if (req.files?.gallery?.length) {
+        req.files.gallery.forEach((file) => {
+            images.push(normalizeImagePath(file.path.replace(/\\/g, "/")));
+        });
+    }
+
+    if (images.length === 0 && Array.isArray(req.body.images)) {
+        return req.body.images.map((entry) => normalizeImagePath(entry)).filter(Boolean);
+    }
+
+    return [...new Set(images.filter(Boolean))];
+};
 
 const createProduct = async (req, res) => {
-
     try {
-
-        const images = req.file ? [req.file.path.replace(/\\/g, "/")] : req.body.images || [];
+        const images = collectUploadedImages(req);
 
         const product = await Product.create({
 
@@ -66,6 +101,36 @@ const getAllProduct = async (req, res) => {
 
         const filter = buildProductQuery(req.query, subcategoryIds);
 
+        if (req.query.color || req.query.size) {
+            const variantQuery = {};
+
+            if (req.query.color) {
+                variantQuery.color = { $regex: req.query.color, $options: "i" };
+            }
+
+            if (req.query.size) {
+                variantQuery.size = req.query.size;
+            }
+
+            const matchingVariants = await Variant.find(variantQuery).select("product_id").lean();
+            const variantProductIds = [...new Set(matchingVariants.map((entry) => String(entry.product_id)))];
+
+            if (variantProductIds.length === 0) {
+                return res.status(200).json({
+                    success: true,
+                    data: [],
+                    pagination: {
+                        page,
+                        limit,
+                        total: 0,
+                        pages: 0,
+                    },
+                });
+            }
+
+            filter._id = { $in: variantProductIds };
+        }
+
         const sort = buildSort(req.query.sort);
 
 
@@ -80,13 +145,31 @@ const getAllProduct = async (req, res) => {
 
             .limit(limit);
 
+        const productIds = product.map((entry) => entry._id);
+        const variants = productIds.length
+            ? await Variant.find({ product_id: { $in: productIds } })
+            : [];
 
+        const variantsByProduct = variants.reduce((map, variant) => {
+            const key = variant.product_id.toString();
+
+            if (!map[key]) {
+                map[key] = [];
+            }
+
+            map[key].push(variant);
+
+            return map;
+        }, {});
 
         res.status(200).json({
 
             success: true,
 
-            data: product,
+            data: product.map((entry) => ({
+                ...formatProductRecord(entry),
+                variants: formatVariantList(variantsByProduct[entry._id.toString()] || []),
+            })),
 
             pagination: {
 
@@ -150,9 +233,9 @@ const getVendorProducts = async (req, res) => {
 
         const data = products.map((product) => ({
 
-            ...product.toObject(),
+            ...formatProductRecord(product),
 
-            variants: variantsByProduct[product._id.toString()] || [],
+            variants: formatVariantList(variantsByProduct[product._id.toString()] || []),
 
         }));
 
@@ -208,9 +291,9 @@ const getProductByID = async (req, res) => {
 
             data: {
 
-                ...product.toObject(),
+                ...formatProductRecord(product),
 
-                variants,
+                variants: formatVariantList(variants),
 
             },
 
@@ -255,23 +338,21 @@ const putProduct = async (req, res) => {
 
 
         const updatePayload = { ...req.body };
+        const existingProduct = await Product.findById(req.params.id).lean();
+        const uploadedImages = collectUploadedImages(req, existingProduct?.images || [], {
+            replaceMainImage: Boolean(req.files?.image?.[0] || req.file),
+        });
 
-        if (req.file) {
-            updatePayload.images = [req.file.path.replace(/\\/g, "/")];
+        if (uploadedImages.length > 0) {
+            updatePayload.images = uploadedImages;
         }
 
         const updateProduct = await Product.findByIdAndUpdate(req.params.id, updatePayload, { new: true });
 
-
-
         res.status(200).json({
-
             success: true,
-
             message: "Product updated successfully",
-
-            data: updateProduct,
-
+            data: formatProductRecord(updateProduct),
         });
 
     } catch (error) {

@@ -28,15 +28,8 @@ const userSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ["customer", "vendor", "admin"],
+        enum: ["customer", "vendor"],
         required: true
-    },
-    approvalStatus: {
-        type: String,
-        enum: ["pending", "approved", "rejected"],
-        default: function () {
-            return this.role === "vendor" ? "pending" : undefined;
-        },
     },
     isVerified: {
         type: Boolean,

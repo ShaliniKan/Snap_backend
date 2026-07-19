@@ -2,15 +2,9 @@ const User = require("../Modules/Users");
 const Vendor = require("../Modules/Vendor");
 const Product = require("../Modules/Product");
 const Order = require("../Modules/Order");
+const Return = require("../Modules/Return");
+const Coupon = require("../Modules/Coupon");
 const { getUserId, getVendorProductIds } = require("../utils/vendorHelpers");
-const { sendVendorStatusEmail } = require("../utils/emailService");
-
-const syncVendorApproval = async (userId, status) => {
-    const isApproved = status === "approved";
-
-    await User.findByIdAndUpdate(userId, { approvalStatus: status });
-    await Vendor.findOneAndUpdate({ userId }, { isApproved }, { new: true });
-};
 
 const getProfile = async (req, res) => {
     try {
@@ -55,14 +49,11 @@ const createProfile = async (req, res) => {
             businessName,
             businessAddress,
             contactNumber,
-            isApproved: false,
         });
-
-        await User.findByIdAndUpdate(userId, { approvalStatus: "pending" });
 
         return res.status(201).json({
             success: true,
-            message: "Seller profile submitted for approval",
+            message: "Seller profile created successfully",
             data: vendor,
         });
     } catch (error) {
@@ -159,87 +150,86 @@ const getDashboardStats = async (req, res) => {
     }
 };
 
-const listPendingVendors = async (req, res) => {
+const getPlatformDashboard = async (req, res) => {
     try {
-        const vendors = await Vendor.find({ isApproved: false })
-            .populate("userId", "firstName lastName email approvalStatus role")
-            .sort({ createdAt: -1 });
+        const [orderCount, returnCount, pendingReturns, customerCount, vendorCount, couponCount] = await Promise.all([
+            Order.countDocuments(),
+            Return.countDocuments(),
+            Return.countDocuments({ status: "requested" }),
+            User.countDocuments({ role: "customer" }),
+            User.countDocuments({ role: "vendor" }),
+            Coupon.countDocuments({ isActive: true }),
+        ]);
 
-        const data = vendors.filter((vendor) => vendor.userId?.approvalStatus === "pending");
+        const revenueAgg = await Order.aggregate([
+            { $match: { payment_status: { $in: ["paid", "pending"] }, order_status: { $ne: "cancelled" } } },
+            { $group: { _id: null, total: { $sum: "$total_amount" } } },
+        ]);
 
         return res.status(200).json({
             success: true,
-            data,
+            data: {
+                orderCount,
+                returnCount,
+                pendingReturns,
+                customerCount,
+                vendorCount,
+                couponCount,
+                revenue: revenueAgg[0]?.total || 0,
+            },
         });
     } catch (error) {
-        return res.status(500).json({
-            success: false,
-            message: error.message,
-        });
+        return res.status(500).json({ success: false, message: error.message });
     }
 };
 
-const approveVendor = async (req, res) => {
+const getAllOrders = async (req, res) => {
     try {
-        const { vendorUserId } = req.params;
-        const vendor = await Vendor.findOne({ userId: vendorUserId });
+        const orders = await Order.find()
+            .populate("customer_id", "firstName lastName email")
+            .populate("items.product_id")
+            .sort({ createdAt: -1 })
+            .limit(100);
 
-        if (!vendor) {
-            return res.status(404).json({
-                success: false,
-                message: "Vendor not found",
-            });
-        }
-
-        await syncVendorApproval(vendorUserId, "approved");
-
-        const updatedVendor = await Vendor.findOne({ userId: vendorUserId }).populate(
-            "userId",
-            "firstName lastName email approvalStatus"
-        );
-
-        return res.status(200).json({
-            success: true,
-            message: "Vendor approved successfully",
-            data: updatedVendor,
-        });
+        return res.status(200).json({ success: true, data: orders });
     } catch (error) {
-        return res.status(500).json({
-            success: false,
-            message: error.message,
-        });
+        return res.status(500).json({ success: false, message: error.message });
     }
 };
 
-const rejectVendor = async (req, res) => {
+const updatePlatformOrderStatus = async (req, res) => {
     try {
-        const { vendorUserId } = req.params;
-        const vendor = await Vendor.findOne({ userId: vendorUserId });
+        const { order_status } = req.body;
+        const allowedStatuses = ["placed", "processing", "shipped", "delivered", "cancelled"];
 
-        if (!vendor) {
-            return res.status(404).json({
+        if (!allowedStatuses.includes(order_status)) {
+            return res.status(400).json({
                 success: false,
-                message: "Vendor not found",
+                message: "Invalid order status",
             });
         }
 
-        await syncVendorApproval(vendorUserId, "rejected");
+        const order = await Order.findById(req.params.orderId);
 
-        const updatedVendor = await Vendor.findOne({ userId: vendorUserId }).populate(
-            "userId",
-            "firstName lastName email approvalStatus"
-        );
+        if (!order) {
+            return res.status(404).json({
+                success: false,
+                message: "Order not found",
+            });
+        }
+
+        order.order_status = order_status;
+        await order.save();
+        await order.populate("customer_id", "firstName lastName email");
+        await order.populate("items.product_id");
 
         return res.status(200).json({
             success: true,
-            message: "Vendor rejected",
-            data: updatedVendor,
+            message: "Order status updated",
+            data: order,
         });
     } catch (error) {
-        return res.status(500).json({
-            success: false,
-            message: error.message,
-        });
+        return res.status(500).json({ success: false, message: error.message });
     }
 };
 
@@ -248,7 +238,7 @@ module.exports = {
     createProfile,
     updateProfile,
     getDashboardStats,
-    listPendingVendors,
-    approveVendor,
-    rejectVendor,
+    getPlatformDashboard,
+    getAllOrders,
+    updatePlatformOrderStatus,
 };

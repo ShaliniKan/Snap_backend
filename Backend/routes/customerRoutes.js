@@ -10,5 +10,6 @@ router.post("/addresses", authUser, authRole("customer"), customerController.add
 router.put("/addresses/:addressId", authUser, authRole("customer"), customerController.updateAddress);
 router.delete("/addresses/:addressId", authUser, authRole("customer"), customerController.deleteAddress);
 router.put("/addresses/:addressId/default", authUser, authRole("customer"), customerController.setDefaultAddress);
+router.put("/change-password", authUser, authRole("customer"), customerController.changePassword);
 
 module.exports = router;

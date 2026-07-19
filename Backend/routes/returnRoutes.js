@@ -6,7 +6,7 @@ const { authRole } = require("../Middleware/authRole");
 
 router.post("/order/:orderId", authUser, authRole("customer"), returnController.createReturnRequest);
 router.get("/my", authUser, authRole("customer"), returnController.getMyReturns);
-router.get("/", authUser, authRole("admin"), returnController.listAllReturns);
-router.put("/:returnId", authUser, authRole("admin"), returnController.updateReturnStatus);
+router.get("/", authUser, authRole("vendor"), returnController.listAllReturns);
+router.put("/:returnId", authUser, authRole("vendor"), returnController.updateReturnStatus);
 
 module.exports = router;

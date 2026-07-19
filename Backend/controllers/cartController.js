@@ -33,7 +33,9 @@ const addToCart = async(req,res) =>{
         const {
             product_id,
             variant_id,
-            quantity
+            quantity,
+            size,
+            color,
         } = req.body
 
         if(quantity <= 0)
@@ -85,9 +87,9 @@ const addToCart = async(req,res) =>{
         }
 
         const existingItem = cart.items.find(item =>
-            item.product_id.toString() === product_id &&(
-                !variant_id || item.variant_id?.toString() === variant_id
-            )
+            item.product_id.toString() === product_id &&
+            (item.variant_id?.toString() || "") === (variant_id || "") &&
+            (item.selected_size || "") === (size || "")
         );
 
         const itemPrice = resolveSellingPrice(product, variant);
@@ -97,10 +99,18 @@ const addToCart = async(req,res) =>{
             if (!existingItem.price || existingItem.price <= 0) {
                 existingItem.price = itemPrice;
             }
+            if (size) {
+                existingItem.selected_size = size;
+            }
+            if (color) {
+                existingItem.selected_color = color;
+            }
         } else {
             cart.items.push ({
                 product_id,
                 variant_id,
+                selected_size: size || variant?.size || "",
+                selected_color: color || variant?.color || "",
                 quantity,
                 price: itemPrice
             });

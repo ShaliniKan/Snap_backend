@@ -22,10 +22,6 @@ const vendorSchema = mongoose.Schema({
         type: String,
         required: true,
         match: /^[6-9]\d{9}$/
-    },
-    isApproved: {
-        type:Boolean,
-        default: false
     }
 },{
     timestamps: true

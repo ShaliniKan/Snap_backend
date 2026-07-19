@@ -1,4 +1,11 @@
 const Customer = require("../Modules/Customer");
+const User = require("../Modules/Users");
+
+const PASSWORD_RULE_MESSAGE =
+    "Password should have a minimum of 6 characters, at least 1 numeric and 1 alphabet";
+
+const isValidPassword = (password = "") =>
+    password.length >= 6 && /[0-9]/.test(password) && /[a-zA-Z]/.test(password);
 
 const getOrCreateCustomer = async (userId) => {
     let customer = await Customer.findOne({ userId });
@@ -185,6 +192,41 @@ const setDefaultAddress = async (req, res) => {
     }
 };
 
+const changePassword = async (req, res) => {
+    try {
+        const { newPassword } = req.body;
+
+        if (!isValidPassword(newPassword)) {
+            return res.status(400).json({
+                success: false,
+                message: PASSWORD_RULE_MESSAGE,
+            });
+        }
+
+        const user = await User.findById(req.user.id);
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found",
+            });
+        }
+
+        user.password = newPassword;
+        await user.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Password updated successfully",
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};
+
 module.exports = {
     getProfile,
     updateProfile,
@@ -192,4 +234,5 @@ module.exports = {
     updateAddress,
     deleteAddress,
     setDefaultAddress,
+    changePassword,
 };

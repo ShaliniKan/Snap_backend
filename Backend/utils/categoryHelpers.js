@@ -1,4 +1,5 @@
 const PRIORITY_CATEGORIES = ["men", "women", "kids"];
+const mongoose = require("mongoose");
 
 const normalizeName = (name = "") => String(name).trim().toLowerCase();
 
@@ -42,8 +43,40 @@ const buildCategoryResponse = (category, children = []) => {
     };
 };
 
+const toObjectId = (value) => {
+    if (!value) {
+        return null;
+    }
+
+    if (value instanceof mongoose.Types.ObjectId) {
+        return value;
+    }
+
+    try {
+        return new mongoose.Types.ObjectId(String(value));
+    } catch (error) {
+        return null;
+    }
+};
+
+const matchParentCategoryId = (parentCategoryId) => {
+    if (!parentCategoryId) {
+        return { parentCategoryId: null };
+    }
+
+    const parentIdString = String(parentCategoryId);
+
+    return {
+        $expr: {
+            $eq: [{ $toString: "$parentCategoryId" }, parentIdString],
+        },
+    };
+};
+
 module.exports = {
     buildCategoryResponse,
     sortRootCategories,
+    matchParentCategoryId,
+    toObjectId,
     PRIORITY_CATEGORIES,
 };

@@ -19,7 +19,6 @@ const resolveRegistrationRole = (payload = {}) => {
     if (requestedAccountType === "vendor" || requestedRole === "vendor") {
         return {
             role: "vendor",
-            approvalStatus: "pending",
         };
     }
 
