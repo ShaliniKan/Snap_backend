@@ -1,5 +1,10 @@
+html {
+  overflow-x: auto;
+}
+
 body {
   margin: 0;
+  min-width: var(--layout-page-max-width);
   font-size: 12px;
   font-weight: 900;
   line-height: 1.5;
@@ -7,6 +12,10 @@ body {
   background-color: var(--color-page-background);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-width: var(--layout-page-max-width);
 }
 
 * {

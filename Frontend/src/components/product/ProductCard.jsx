@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useCartContext, buildCartProductKey } from "../../context/CartContext";
 import { ROUTES } from "../../routes/routePaths";
 
-const ProductCard = ({ product }) => {
+const ProductCard = ({ product, showAddToCart = true }) => {
     const { addItem, addingProductKey } = useCartContext();
     const productId = product?._id || product?.id;
     const variantId = product?.variants?.[0]?._id || product?.variantId || null;
@@ -58,14 +58,16 @@ const ProductCard = ({ product }) => {
                 </div>
             </Link>
 
-            <button
-                className="mt-4 h-9 w-full rounded-sm bg-red-500 text-sm font-semibold text-white transition hover:bg-red-600 disabled:opacity-60"
-                onClick={handleAdd}
-                disabled={isAdding}
-                type="button"
-            >
-                {isAdding ? "Adding..." : "Add to Cart"}
-            </button>
+            {showAddToCart && (
+                <button
+                    className="mt-4 h-9 w-full rounded-sm bg-red-500 text-sm font-semibold text-white transition hover:bg-red-600 disabled:opacity-60"
+                    onClick={handleAdd}
+                    disabled={isAdding}
+                    type="button"
+                >
+                    {isAdding ? "Adding..." : "Add to Cart"}
+                </button>
+            )}
         </article>
     );
 };

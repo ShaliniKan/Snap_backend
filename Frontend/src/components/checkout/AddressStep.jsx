@@ -1,6 +1,3 @@
-import { useEffect, useState } from "react";
-import { checkPincode } from "../../services/deliveryService";
-
 const AddressStep = ({ address, onAddressChange, deliveryInfo, deliveryError, onPincodeCheck }) => {
   const fields = [
     { key: "name", label: "Name", placeholder: "Enter full name", required: true },

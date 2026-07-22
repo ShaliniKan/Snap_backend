@@ -32,6 +32,10 @@ jobs:
 
       - name: Build frontend
         working-directory: Frontend
+        env:
+          CI: false
+          GENERATE_SOURCEMAP: false
+          NODE_OPTIONS: --max-old-space-size=4096
         run: npm run build
 
       - name: Prepare deployment bundle

@@ -66,7 +66,7 @@ const Home = () => {
                         <SectionState>No products available right now.</SectionState>
                     ) : (
                         <>
-                            <ProductGrid products={visibleProducts} />
+                            <ProductGrid products={visibleProducts} showAddToCart={false} />
 
                             {hasMoreProducts && (
                                 <div className="mt-8 flex justify-center">
