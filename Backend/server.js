@@ -19,7 +19,6 @@ const paymentRoutes = require("./routes/paymentRoutes");
 
 //start
 const app = express();
-connectDB();
 
 app.use(express.json());
 
@@ -39,7 +38,15 @@ app.use("/api/returns", returnRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/uploads", express.static("uploads"));
 
+const startServer = async () => {
+    await connectDB();
 
-app.listen(5000,() => {
-    console.log("Server running");
+    app.listen(5000, () => {
+        console.log("Server running");
+    });
+};
+
+startServer().catch((error) => {
+    console.error("Failed to start server:", error);
+    process.exit(1);
 });
