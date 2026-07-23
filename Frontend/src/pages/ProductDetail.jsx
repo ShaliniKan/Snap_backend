@@ -37,7 +37,7 @@ const ProductDetail = () => {
     const [selectedColor, setSelectedColor] = useState("");
     const [selectedSize, setSelectedSize] = useState("");
     const [selectedImage, setSelectedImage] = useState("");
-    const [quantity, setQuantity] = useState(1);
+    const quantity = 1;
     const [addError, setAddError] = useState("");
     const [activeTab, setActiveTab] = useState("details");
     const [pincode, setPincode] = useState("");

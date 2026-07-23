@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { Link, useParams } from "react-router-dom";
 
@@ -31,37 +31,22 @@ const OrderDetail = () => {
 
 
 
-    const loadOrder = async () => {
-
+    const loadOrder = useCallback(async () => {
         setLoading(true);
-
         setError("");
-
         try {
-
             const data = await getOrderById(orderId);
-
             setOrder(data);
-
         } catch (err) {
-
             setError(err.response?.data?.message || "Could not load order details.");
-
         } finally {
-
             setLoading(false);
-
         }
-
-    };
-
-
+    }, [orderId]);
 
     useEffect(() => {
-
         loadOrder();
-
-    }, [orderId]);
+    }, [loadOrder]);
 
 
 

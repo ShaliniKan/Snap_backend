@@ -133,10 +133,6 @@ export const getMegaMenuColumns = (categoryName = "", subcategories = []) => {
 
     if (layoutBuilder) {
         const columns = dedupeColumns(layoutBuilder(subcategories));
-        const usedCount = columns.reduce(
-            (total, column) => total + column.sections.reduce((sum, section) => sum + section.items.length, 0),
-            0
-        );
         const remaining = subcategories.filter(
             (item) => !columns.some((column) =>
                 column.sections.some((section) => section.items.some((entry) => entry._id === item._id))

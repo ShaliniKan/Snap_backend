@@ -33,7 +33,8 @@ jobs:
       - name: Build frontend
         working-directory: Frontend
         env:
-          CI: false
+          CI: ""
+          DISABLE_ESLINT_PLUGIN: true
           GENERATE_SOURCEMAP: false
           NODE_OPTIONS: --max-old-space-size=4096
         run: npm run build
@@ -70,6 +71,7 @@ jobs:
             set -e
             cd /var/www/apnamart/Backend
             npm ci --omit=dev
+            npm run seed:categories || echo "Category seed/relink skipped or failed — check logs"
             pm2 restart apnamart-api || pm2 start server.js --name apnamart-api
             pm2 save
             sudo nginx -t

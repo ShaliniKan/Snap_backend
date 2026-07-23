@@ -24,7 +24,10 @@ export const CartProvider = ({ children }) => {
     const [successMessage, setSuccessMessage] = useState("");
     const [updatingItemId, setUpdatingItemId] = useState("");
 
-    const cartItems = Array.isArray(cart.items) ? cart.items : [];
+    const cartItems = useMemo(
+        () => (Array.isArray(cart.items) ? cart.items : []),
+        [cart.items]
+    );
     const totalItems = cartItems.reduce((count, item) => count + Number(item.quantity || 0), 0);
     const subtotal = cart.total_amount || cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
 

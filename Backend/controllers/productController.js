@@ -7,6 +7,7 @@ const Categories = require('../Modules/Categories');
 const { buildProductQuery, buildSort, resolveCategoryFilter, formatProductRecord, formatVariantList, normalizeImagePath } = require('../utils/productHelpers');
 
 const { getUserId, assertProductOwnership } = require('../utils/vendorHelpers');
+const { toObjectId } = require('../utils/categoryHelpers');
 
 const collectUploadedImages = (req, existingImages = [], options = {}) => {
     const { replaceMainImage = false } = options;
@@ -97,7 +98,9 @@ const getAllProduct = async (req, res) => {
 
         const limit = Math.min(50, Math.max(1, Number(req.query.limit) || 20));
 
-        const subcategoryIds = await resolveCategoryFilter(Categories, req.query.category);
+        const subcategoryIds = req.query.subcategory
+            ? [toObjectId(req.query.subcategory)].filter(Boolean)
+            : await resolveCategoryFilter(Categories, req.query.category);
 
         const filter = buildProductQuery(req.query, subcategoryIds);
 

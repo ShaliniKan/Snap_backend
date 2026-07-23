@@ -1,6 +1,6 @@
 const DEFAULT_SELLING_PRICE = 999;
 const FALLBACK_IMAGE = "/banner1.jpg";
-const { matchParentCategoryId } = require("./categoryHelpers");
+const { matchParentCategoryId, toObjectId } = require("./categoryHelpers");
 
 const normalizeImagePath = (value = "") => {
   if (!value || !String(value).trim()) {
@@ -86,7 +86,7 @@ const buildProductQuery = (query = {}, subcategoryIds = null) => {
   if (subcategoryIds && subcategoryIds.length > 0) {
     filter.subcategory_id = { $in: subcategoryIds };
   } else if (query.subcategory) {
-    filter.subcategory_id = query.subcategory;
+    filter.subcategory_id = toObjectId(query.subcategory) || query.subcategory;
   }
 
   if (query.search) {
