@@ -48,44 +48,80 @@ const collectUploadedImages = (req, existingImages = [], options = {}) => {
     return [...new Set(images.filter(Boolean))];
 };
 
+const parseProductBody = (body = {}) => {
+    const subcategoryId = toObjectId(body.subcategory_id);
+
+    if (!subcategoryId) {
+        const error = new Error("Please select a valid subcategory");
+        error.statusCode = 400;
+        throw error;
+    }
+
+    const payload = {
+        name: String(body.name || "").trim(),
+        brand: String(body.brand || "").trim(),
+        description: String(body.description || "").trim(),
+        subcategory_id: subcategoryId,
+        price: Number(body.price),
+        quantity: Number(body.quantity),
+        status: body.status || "active",
+    };
+
+    if (!payload.name) {
+        const error = new Error("Product name is required");
+        error.statusCode = 400;
+        throw error;
+    }
+
+    if (Number.isNaN(payload.price) || payload.price < 0) {
+        const error = new Error("Please enter a valid price");
+        error.statusCode = 400;
+        throw error;
+    }
+
+    if (Number.isNaN(payload.quantity) || payload.quantity < 0) {
+        const error = new Error("Please enter a valid stock quantity");
+        error.statusCode = 400;
+        throw error;
+    }
+
+    if (body.discount_price !== undefined && body.discount_price !== "") {
+        const discountPrice = Number(body.discount_price);
+
+        if (Number.isNaN(discountPrice) || discountPrice < 0) {
+            const error = new Error("Please enter a valid discount price");
+            error.statusCode = 400;
+            throw error;
+        }
+
+        payload.discount_price = discountPrice;
+    }
+
+    return payload;
+};
+
 const createProduct = async (req, res) => {
     try {
         const images = collectUploadedImages(req);
+        const productPayload = parseProductBody(req.body);
 
         const product = await Product.create({
-
-            ...req.body,
-
+            ...productPayload,
             vendor_id: getUserId(req.user),
-
             images,
-
         });
-
-
 
         res.status(201).json({
-
             success: true,
-
             message: "Product is created successfully",
-
-            data: product,
-
+            data: formatProductRecord(product),
         });
-
     } catch (error) {
-
-        res.status(500).json({
-
+        res.status(error.statusCode || 500).json({
             success: false,
-
             message: error.message,
-
         });
-
     }
-
 };
 
 
@@ -340,7 +376,7 @@ const putProduct = async (req, res) => {
 
 
 
-        const updatePayload = { ...req.body };
+        const updatePayload = parseProductBody(req.body);
         const existingProduct = await Product.findById(req.params.id).lean();
         const uploadedImages = collectUploadedImages(req, existingProduct?.images || [], {
             replaceMainImage: Boolean(req.files?.image?.[0] || req.file),
@@ -350,7 +386,17 @@ const putProduct = async (req, res) => {
             updatePayload.images = uploadedImages;
         }
 
-        const updateProduct = await Product.findByIdAndUpdate(req.params.id, updatePayload, { new: true });
+        const updateProduct = await Product.findByIdAndUpdate(req.params.id, updatePayload, {
+            new: true,
+            runValidators: true,
+        });
+
+        if (!updateProduct) {
+            return res.status(404).json({
+                success: false,
+                message: "Product not found",
+            });
+        }
 
         res.status(200).json({
             success: true,
@@ -360,7 +406,7 @@ const putProduct = async (req, res) => {
 
     } catch (error) {
 
-        res.status(500).json({
+        res.status(error.statusCode || 500).json({
 
             success: false,
 

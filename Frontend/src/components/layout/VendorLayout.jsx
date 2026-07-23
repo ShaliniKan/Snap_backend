@@ -1,5 +1,4 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import Footer from "./Footer";
 import { useAuth } from "../../context/AuthContext";
 import { ROUTES } from "../../routes/routePaths";
 
@@ -29,7 +28,7 @@ const VendorLayout = () => {
                 <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
                     <div>
                         <p className="text-xs font-semibold uppercase tracking-[0.3em] text-red-500">Vendor Panel</p>
-                        <h1 className="text-xl font-semibold text-slate-900">ApnaMart Seller Centre</h1>
+                        <h1 className="text-xl font-semibold text-slate-900">Snapdeal Seller Centre</h1>
                     </div>
                     <div className="flex items-center gap-3">
                         <NavLink className="text-sm font-semibold text-slate-600 hover:text-red-500" to={ROUTES.public.home}>
@@ -69,8 +68,6 @@ const VendorLayout = () => {
                     <Outlet />
                 </main>
             </div>
-
-            <Footer variant="vendor" />
         </div>
     );
 };

@@ -84,7 +84,7 @@ const VendorProducts = () => {
                                     />
                                     <div className="min-w-0">
                                         <p className="truncate font-semibold text-slate-900">{product.name}</p>
-                                        <p className="truncate text-xs text-slate-500">{product.brand || "ApnaMart"}</p>
+                                        <p className="truncate text-xs text-slate-500">{product.brand || "Snapdeal"}</p>
                                     </div>
                                 </div>
                                 <span className="font-semibold text-slate-900">{formatCurrency(product.discount_price || product.price)}</span>

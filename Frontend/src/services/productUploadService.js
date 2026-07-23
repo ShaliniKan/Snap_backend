@@ -1,5 +1,19 @@
 import api from "./api";
 
+const getApiErrorMessage = (error, fallback) => {
+    const message = error?.response?.data?.message;
+
+    if (message) {
+        return message;
+    }
+
+    if (typeof error?.response?.data === "string" && error.response.data.includes("Only image files are allowed")) {
+        return "Only image files are allowed";
+    }
+
+    return fallback;
+};
+
 export const createVendorProductWithImage = async (payload, imageFile, galleryFiles = []) => {
     const formData = new FormData();
 
@@ -17,8 +31,12 @@ export const createVendorProductWithImage = async (payload, imageFile, galleryFi
         formData.append("gallery", file);
     });
 
-    const response = await api.post("/api/product", formData);
-    return response.data?.data;
+    try {
+        const response = await api.post("/api/product", formData);
+        return response.data?.data;
+    } catch (error) {
+        throw new Error(getApiErrorMessage(error, "Could not save product."));
+    }
 };
 
 export const updateVendorProductWithImage = async (productId, payload, imageFile, galleryFiles = []) => {
@@ -38,8 +56,12 @@ export const updateVendorProductWithImage = async (productId, payload, imageFile
         formData.append("gallery", file);
     });
 
-    const response = await api.put(`/api/product/${productId}`, formData);
-    return response.data?.data;
+    try {
+        const response = await api.put(`/api/product/${productId}`, formData);
+        return response.data?.data;
+    } catch (error) {
+        throw new Error(getApiErrorMessage(error, "Could not save product."));
+    }
 };
 
 export const createVariantWithImage = async (productId, payload, imageFile) => {

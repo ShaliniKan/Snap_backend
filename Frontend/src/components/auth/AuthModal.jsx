@@ -151,7 +151,7 @@ const AuthModal = () => {
                 error={authError}
                 message={authMessage}
                 title={registerAsVendor ? "Become a Seller" : "Sign up"}
-                subtitle={registerAsVendor ? "Register as an ApnaMart seller" : "Create account"}
+                subtitle={registerAsVendor ? "Register as a Snapdeal seller" : "Create account"}
                 submitLabel={registerAsVendor ? "Create seller account" : "Create account"}
             />
         );

@@ -37,7 +37,31 @@ export const resolveImageUrl = (value = "") => {
         normalized = `/${normalized}`;
     }
 
-    return normalized;
+    return encodeUriPath(normalized);
+};
+
+const encodeUriPath = (normalized) => {
+    if (!normalized || normalized.startsWith("http://") || normalized.startsWith("https://")) {
+        return normalized;
+    }
+
+    const [pathname, ...queryParts] = normalized.split("?");
+    const encodedPath = pathname
+        .split("/")
+        .map((segment) => {
+            if (!segment) {
+                return segment;
+            }
+
+            try {
+                return encodeURIComponent(decodeURIComponent(segment));
+            } catch (error) {
+                return encodeURIComponent(segment);
+            }
+        })
+        .join("/");
+
+    return queryParts.length > 0 ? `${encodedPath}?${queryParts.join("?")}` : encodedPath;
 };
 
 export const getProductPrimaryImage = (product) => {
@@ -61,9 +85,11 @@ export const normalizeProduct = (product) => {
     const primaryImage = getProductPrimaryImage({ ...product, variants: normalizedVariants });
     const price = product.price || variant.price || 999;
     const sellingPrice = product.discount_price || product.discountPrice || variant.discount_price || variant.discountPrice || price;
-    const normalizedImages = (product.images || [])
-        .filter(Boolean)
-        .map(resolveImageUrl);
+    const normalizedImages = [...new Set(
+        (product.images || [])
+            .map(resolveImageUrl)
+            .filter(Boolean)
+    )];
 
     return {
         ...product,

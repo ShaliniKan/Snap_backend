@@ -43,6 +43,7 @@ const ProductDetail = () => {
     const [pincode, setPincode] = useState("");
     const [pincodeMessage, setPincodeMessage] = useState("");
     const [isBuying, setIsBuying] = useState(false);
+    const [brokenGalleryImages, setBrokenGalleryImages] = useState(() => new Set());
 
     useEffect(() => {
         const loadProduct = async () => {
@@ -94,11 +95,31 @@ const ProductDetail = () => {
             ...(product.images || []),
             ...(product.variants || []).map((variant) => variant.image).filter(Boolean),
         ]
-            .filter(Boolean)
-            .map(resolveImageUrl);
+            .map(resolveImageUrl)
+            .filter(Boolean);
 
         return [...new Set(images)];
     }, [product]);
+
+    const visibleGalleryImages = useMemo(
+        () => galleryImages.filter((image) => !brokenGalleryImages.has(image)),
+        [galleryImages, brokenGalleryImages]
+    );
+
+    useEffect(() => {
+        setBrokenGalleryImages(new Set());
+    }, [productId]);
+
+    useEffect(() => {
+        if (!selectedImage && visibleGalleryImages.length > 0) {
+            setSelectedImage(visibleGalleryImages[0]);
+            return;
+        }
+
+        if (selectedImage && brokenGalleryImages.has(selectedImage) && visibleGalleryImages.length > 0) {
+            setSelectedImage(visibleGalleryImages[0]);
+        }
+    }, [brokenGalleryImages, selectedImage, visibleGalleryImages]);
 
     const uniqueColors = useMemo(() => {
         return [...new Set((product?.variants || []).map((variant) => variant.color).filter(Boolean))];
@@ -338,9 +359,9 @@ const ProductDetail = () => {
 
                 <div className="mt-4 grid gap-8 lg:grid-cols-[minmax(0,520px)_minmax(0,1fr)]">
                     <section className="flex gap-3">
-                        {galleryImages.length > 0 && (
+                        {visibleGalleryImages.length > 0 && (
                             <div className="flex w-16 shrink-0 flex-col gap-2">
-                                {galleryImages.map((image, index) => (
+                                {visibleGalleryImages.map((image, index) => (
                                     <button
                                         key={`${image}-${index}`}
                                         type="button"
@@ -349,7 +370,22 @@ const ProductDetail = () => {
                                             selectedImage === image ? "border-[#2f82c6]" : "border-slate-200"
                                         }`}
                                     >
-                                        <img src={image} alt={`${product.name} ${index + 1}`} className="h-full w-full object-cover" />
+                                        <img
+                                            src={image}
+                                            alt={`${product.name} ${index + 1}`}
+                                            className="h-full w-full object-cover"
+                                            onError={() => {
+                                                setBrokenGalleryImages((current) => {
+                                                    if (current.has(image)) {
+                                                        return current;
+                                                    }
+
+                                                    const next = new Set(current);
+                                                    next.add(image);
+                                                    return next;
+                                                });
+                                            }}
+                                        />
                                     </button>
                                 ))}
                             </div>
@@ -613,7 +649,7 @@ const ProductDetail = () => {
                 availableStock={availableStock}
                 displayPrice={displayPrice}
                 formatCurrency={formatCurrency}
-                galleryImages={galleryImages}
+                galleryImages={visibleGalleryImages}
                 hasDiscount={hasDiscount}
                 isAuthenticated={isAuthenticated}
                 isBuying={isBuying}

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import SectionState from "../../components/common/SectionState";
-import { getCategories, getSubcategories } from "../../services/categoryService";
+import { getCategories, getCategoryDetails, getSubcategories } from "../../services/categoryService";
 import { deleteProductVariant, getVendorProducts } from "../../services/vendorService";
 import { createVendorProductWithImage, updateVendorProductWithImage, createVariantWithImage } from "../../services/productUploadService";
 import { resolveImageUrl } from "../../services/productService";
@@ -41,7 +41,10 @@ const VendorProductForm = () => {
     const [variantForm, setVariantForm] = useState(emptyVariant);
     const [selectedSizes, setSelectedSizes] = useState([]);
     const [variants, setVariants] = useState([]);
+    const [categories, setCategories] = useState([]);
+    const [categoryId, setCategoryId] = useState("");
     const [subcategories, setSubcategories] = useState([]);
+    const [loadingSubcategories, setLoadingSubcategories] = useState(false);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState("");
@@ -54,17 +57,49 @@ const VendorProductForm = () => {
     const [variantImagePreview, setVariantImagePreview] = useState("");
 
     useEffect(() => {
+        const loadSubcategoriesForCategory = async (parentCategoryId, preserveSubcategoryId = "") => {
+            if (!parentCategoryId) {
+                setSubcategories([]);
+                return;
+            }
+
+            setLoadingSubcategories(true);
+
+            try {
+                const nextSubcategories = await getSubcategories(parentCategoryId);
+                let availableSubcategories = nextSubcategories;
+
+                if (
+                    preserveSubcategoryId &&
+                    !nextSubcategories.some((entry) => entry._id === preserveSubcategoryId)
+                ) {
+                    try {
+                        const currentSubcategory = await getCategoryDetails(preserveSubcategoryId);
+
+                        if (currentSubcategory?._id) {
+                            availableSubcategories = [...nextSubcategories, currentSubcategory];
+                        }
+                    } catch (loadError) {
+                        // Keep existing selection if details cannot be loaded.
+                    }
+                }
+
+                setSubcategories(availableSubcategories);
+            } catch (loadError) {
+                setSubcategories([]);
+                setError("Could not load subcategories for the selected category.");
+            } finally {
+                setLoadingSubcategories(false);
+            }
+        };
+
         const loadFormData = async () => {
             setLoading(true);
             setError("");
 
             try {
-                const categories = await getCategories();
-                const subcategoryLists = await Promise.all(
-                    categories.map((category) => getSubcategories(category._id))
-                );
-                const flatSubcategories = subcategoryLists.flat();
-                setSubcategories(flatSubcategories);
+                const rootCategories = await getCategories();
+                setCategories(rootCategories);
 
                 if (isEditing) {
                     const products = await getVendorProducts();
@@ -74,11 +109,26 @@ const VendorProductForm = () => {
                         throw new Error("Product not found");
                     }
 
+                    const subcategoryId = product.subcategory_id?._id || product.subcategory_id || "";
+                    let parentCategoryId = product.subcategory_id?.parentCategoryId || "";
+
+                    if (subcategoryId && !parentCategoryId) {
+                        try {
+                            const currentSubcategory = await getCategoryDetails(subcategoryId);
+                            parentCategoryId = currentSubcategory?.parentCategoryId || "";
+                        } catch (loadError) {
+                            // Seller will need to pick a category manually.
+                        }
+                    }
+
+                    setCategoryId(parentCategoryId);
+                    await loadSubcategoriesForCategory(parentCategoryId, subcategoryId);
+
                     setForm({
                         name: product.name || "",
                         brand: product.brand || "",
                         description: product.description || "",
-                        subcategory_id: product.subcategory_id?._id || product.subcategory_id || "",
+                        subcategory_id: subcategoryId,
                         price: product.price ?? "",
                         discount_price: product.discount_price ?? "",
                         quantity: product.quantity ?? "",
@@ -97,6 +147,29 @@ const VendorProductForm = () => {
 
         loadFormData();
     }, [isEditing, productId]);
+
+    const handleCategoryChange = async (nextCategoryId) => {
+        setCategoryId(nextCategoryId);
+        setForm((current) => ({ ...current, subcategory_id: "" }));
+        setError("");
+
+        if (!nextCategoryId) {
+            setSubcategories([]);
+            return;
+        }
+
+        setLoadingSubcategories(true);
+
+        try {
+            const nextSubcategories = await getSubcategories(nextCategoryId);
+            setSubcategories(nextSubcategories);
+        } catch (loadError) {
+            setSubcategories([]);
+            setError("Could not load subcategories for the selected category.");
+        } finally {
+            setLoadingSubcategories(false);
+        }
+    };
 
     const payload = useMemo(
         () => ({
@@ -126,6 +199,16 @@ const VendorProductForm = () => {
     const handleSaveProduct = async (event) => {
         event.preventDefault();
 
+        if (!categoryId) {
+            setError("Please select a category.");
+            return;
+        }
+
+        if (!form.subcategory_id) {
+            setError("Please select a subcategory.");
+            return;
+        }
+
         try {
             setSaving(true);
             setError("");
@@ -145,7 +228,7 @@ const VendorProductForm = () => {
                 navigate(ROUTES.vendor.productEdit.replace(":productId", created._id), { replace: true });
             }
         } catch (err) {
-            setError(err.response?.data?.message || "Could not save product.");
+            setError(err.message || err.response?.data?.message || "Could not save product.");
         } finally {
             setSaving(false);
         }
@@ -241,9 +324,37 @@ const VendorProductForm = () => {
                             <textarea className="mt-1 min-h-24 w-full rounded-sm border border-slate-200 px-3 py-2" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
                         </label>
                         <label className="block text-sm">
+                            <span className="font-semibold text-slate-700">Category</span>
+                            <select
+                                className="mt-1 h-10 w-full rounded-sm border border-slate-200 px-3"
+                                value={categoryId}
+                                onChange={(e) => handleCategoryChange(e.target.value)}
+                                required
+                            >
+                                <option value="">Select category</option>
+                                {categories.map((category) => (
+                                    <option key={category._id} value={category._id}>{category.itemName}</option>
+                                ))}
+                            </select>
+                        </label>
+                        <label className="block text-sm">
                             <span className="font-semibold text-slate-700">Subcategory</span>
-                            <select className="mt-1 h-10 w-full rounded-sm border border-slate-200 px-3" value={form.subcategory_id} onChange={(e) => setForm({ ...form, subcategory_id: e.target.value })} required>
-                                <option value="">Select subcategory</option>
+                            <select
+                                className="mt-1 h-10 w-full rounded-sm border border-slate-200 px-3 disabled:bg-slate-50"
+                                value={form.subcategory_id}
+                                onChange={(e) => setForm({ ...form, subcategory_id: e.target.value })}
+                                disabled={!categoryId || loadingSubcategories}
+                                required
+                            >
+                                <option value="">
+                                    {!categoryId
+                                        ? "Select a category first"
+                                        : loadingSubcategories
+                                          ? "Loading subcategories..."
+                                          : subcategories.length > 0
+                                            ? "Select subcategory"
+                                            : "No subcategories available"}
+                                </option>
                                 {subcategories.map((subcategory) => (
                                     <option key={subcategory._id} value={subcategory._id}>{subcategory.itemName}</option>
                                 ))}

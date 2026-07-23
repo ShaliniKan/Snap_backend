@@ -38,6 +38,31 @@ app.use("/api/returns", returnRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/uploads", express.static("uploads"));
 
+app.use((error, req, res, next) => {
+    if (res.headersSent) {
+        return next(error);
+    }
+
+    if (error?.code === "LIMIT_FILE_SIZE") {
+        return res.status(400).json({
+            success: false,
+            message: "Each image must be smaller than 5MB",
+        });
+    }
+
+    if (error?.message) {
+        return res.status(error.statusCode || 500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+
+    return res.status(500).json({
+        success: false,
+        message: "Something went wrong",
+    });
+});
+
 const startServer = async () => {
     await connectDB();
 

@@ -1,6 +1,7 @@
 require("dotenv").config();
 
 const mongoose = require("mongoose");
+const connectDB = require("../db_connection");
 const User = require("../Modules/Users");
 const Vendor = require("../Modules/Vendor");
 const Product = require("../Modules/Product");
@@ -8,7 +9,7 @@ const Product = require("../Modules/Product");
 const SAMPLE_VENDOR_EMAIL = process.env.SAMPLE_VENDOR_EMAIL || "vendertest@gmail.com";
 
 const assignProductsToSampleVendor = async () => {
-    await mongoose.connect("mongodb://127.0.0.1:27017/apnamart_db");
+    await connectDB();
 
     const vendorUser = await User.findOne({ email: SAMPLE_VENDOR_EMAIL.toLowerCase() });
 
@@ -45,7 +46,7 @@ const assignProductsToSampleVendor = async () => {
     console.log(`Total products owned by sample vendor: ${ownedCount}`);
     console.log(`Vendor user id: ${vendorUser._id}`);
 
-    await mongoose.disconnect();
+    await mongoose.connection.close();
 };
 
 assignProductsToSampleVendor()

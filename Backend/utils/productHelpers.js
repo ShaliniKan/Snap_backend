@@ -24,12 +24,39 @@ const normalizeImagePath = (value = "") => {
   return normalized;
 };
 
+const encodeUriPath = (normalized) => {
+  if (!normalized || normalized.startsWith("http://") || normalized.startsWith("https://")) {
+    return normalized;
+  }
+
+  const [pathname, ...queryParts] = normalized.split("?");
+  const encodedPath = pathname
+    .split("/")
+    .map((segment) => {
+      if (!segment) {
+        return segment;
+      }
+
+      try {
+        return encodeURIComponent(decodeURIComponent(segment));
+      } catch (error) {
+        return encodeURIComponent(segment);
+      }
+    })
+    .join("/");
+
+  return queryParts.length > 0 ? `${encodedPath}?${queryParts.join("?")}` : encodedPath;
+};
+
 const formatProductImages = (images = []) => {
   const formatted = (Array.isArray(images) ? images : [])
     .map(normalizeImagePath)
-    .filter(Boolean);
+    .filter(Boolean)
+    .map(encodeUriPath);
 
-  return formatted.length > 0 ? formatted : [FALLBACK_IMAGE];
+  const unique = [...new Set(formatted)];
+
+  return unique.length > 0 ? unique : [FALLBACK_IMAGE];
 };
 
 const formatVariantRecord = (variant) => {
