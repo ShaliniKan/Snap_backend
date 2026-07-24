@@ -111,7 +111,7 @@ const SellOnApnaMart = () => {
                 <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-2 lg:items-center lg:gap-12 lg:px-8 lg:py-16">
                     <div>
                         <h1 className="text-3xl font-bold leading-tight text-slate-900 sm:text-4xl lg:text-5xl">
-                            Start Selling on ApnaMart at{" "}
+                            Start Selling on Snapdeal at{" "}
                             <span className="text-red-500">0% Commission</span>*
                         </h1>
                         <p className="mt-4 text-base text-slate-600 sm:text-lg">
@@ -197,7 +197,7 @@ const SellOnApnaMart = () => {
             <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
                 <div className="text-center">
                     <p className="text-sm font-semibold uppercase tracking-[0.3em] text-red-500">Seller onboarding</p>
-                    <h2 className="mt-2 text-3xl font-bold text-slate-900">How to Sell on ApnaMart</h2>
+                    <h2 className="mt-2 text-3xl font-bold text-slate-900">How to Sell on Snapdeal</h2>
                 </div>
 
                 <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -221,7 +221,7 @@ const SellOnApnaMart = () => {
 
             <footer className="bg-slate-900 text-slate-300">
                 <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 px-4 py-8 sm:flex-row sm:px-6 lg:px-8">
-                    <p className="text-sm">© {new Date().getFullYear()} ApnaMart. All rights reserved.</p>
+                    <p className="text-sm">© {new Date().getFullYear()} Snapdeal. All rights reserved.</p>
                     <div className="flex items-center gap-4">
                         {socialLinks.map((link) => (
                             <a
